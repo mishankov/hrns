@@ -38,15 +38,18 @@ func (a *Agent) RunLoop(ctx context.Context, messages []openai.ChatCompletionMes
 	tools := []openai.ChatCompletionToolUnionParam{}
 	for name, tool := range a.tools {
 		properties := map[string]map[string]string{}
+		required := []string{}
 		for _, argument := range tool.arguments {
 			properties[argument.Name] = map[string]string{
 				"type": argument.Type,
 			}
+			required = append(required, argument.Name)
 		}
 
 		parameters := shared.FunctionParameters{
 			"type":       "object",
 			"properties": properties,
+			"required":   required,
 		}
 
 		tools = append(tools, openai.ChatCompletionToolUnionParam{
