@@ -3,6 +3,7 @@ package agent
 import (
 	"bytes"
 	"encoding/json"
+	"errors"
 	"io/fs"
 	"log"
 	"os"
@@ -62,7 +63,14 @@ var WriteFileTool = NewTool(
 		newString := args["newString"].(string)
 
 		dat, err := os.ReadFile(fileName)
-		if err != nil {
+		if errors.Is(err, fs.ErrNotExist) {
+			// Create file if it doesn't exist
+			err = os.WriteFile(fileName, []byte(newString), 0644)
+			if err != nil {
+				return "ERROR: tools calling error: " + err.Error()
+			}
+			return "OK"
+		} else if err != nil {
 			return "ERROR: tools calling error: " + err.Error()
 		}
 
