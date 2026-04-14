@@ -7,5 +7,9 @@ type ToolArgument struct {
 type Tool struct {
 	description string
 	arguments   []ToolArgument
-	function    func(args any) string
+	function    func(args map[string]any) string
+}
+
+func NewTool(description string, arguments []ToolArgument, function func(args map[string]any) string) Tool {
+	return Tool{description, arguments, function}
 }
