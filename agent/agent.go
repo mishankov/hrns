@@ -96,7 +96,9 @@ func (a *Agent) RunLoop(ctx context.Context, messages []openai.ChatCompletionMes
 			}
 		}
 
-		messages = append(messages, accumulator.Choices[0].Message.ToParam())
+		if len(accumulator.Choices) > 0 {
+			messages = append(messages, accumulator.Choices[0].Message.ToParam())
+		}
 
 		if stream.Err() != nil {
 			a.sendChunk(NewChunkError("error in LLM stream: " + stream.Err().Error()))
