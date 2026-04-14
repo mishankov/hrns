@@ -14,6 +14,7 @@ type Agent struct {
 	systemPrompt string
 	model        string
 	tools        map[string]Tool
+	messages     []openai.ChatCompletionMessageParamUnion
 	chunkCh      chan Chunk
 }
 
@@ -22,6 +23,7 @@ func New(openAIClient *openai.Client, systemPrompt string, tools map[string]Tool
 		openAIClient: openAIClient,
 		systemPrompt: systemPrompt,
 		tools:        tools,
+		messages:     []openai.ChatCompletionMessageParamUnion{},
 		chunkCh:      make(chan Chunk),
 	}
 }
@@ -91,6 +93,8 @@ func (a *Agent) RunLoop(ctx context.Context, messages []openai.ChatCompletionMes
 			}
 		}
 
+		messages = append(messages, accumulator.Choices[0].Message.ToParam())
+
 		if stream.Err() != nil {
 			a.sendChunk(NewChunkError("error in LLM stream: " + stream.Err().Error()))
 		}
@@ -144,11 +148,17 @@ func (a *Agent) RunLoop(ctx context.Context, messages []openai.ChatCompletionMes
 		}
 	}
 
+	a.messages = messages
+
 	a.sendChunk(NewChunkEnd())
 }
 
 func (a *Agent) Chunks() chan Chunk {
 	return a.chunkCh
+}
+
+func (a *Agent) Messages() []openai.ChatCompletionMessageParamUnion {
+	return a.messages
 }
 
 func (a *Agent) sendChunk(chunk Chunk) {
