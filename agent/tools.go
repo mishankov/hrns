@@ -6,7 +6,9 @@ import (
 	"io/fs"
 	"log"
 	"os"
+	"os/exec"
 	"path"
+	"runtime"
 )
 
 var ReadFileTool = NewTool(
@@ -72,5 +74,28 @@ var WriteFileTool = NewTool(
 		}
 
 		return "OK"
+	},
+)
+
+var CommandTool = NewTool(
+	"Runs shell command",
+	[]ToolArgument{{Name: "command", Type: "string"}},
+	func(args map[string]any) string {
+		// TODO: make safe type assertions
+		command := args["command"].(string)
+
+		var cmd *exec.Cmd
+		if runtime.GOOS == "windows" {
+			cmd = exec.Command("cmd", "/C", command)
+		} else {
+			cmd = exec.Command("/bin/sh", "-c", command)
+		}
+
+		output, err := cmd.CombinedOutput()
+		if err != nil {
+			return "ERROR: tools calling error: " + err.Error()
+		}
+
+		return string(output)
 	},
 )
