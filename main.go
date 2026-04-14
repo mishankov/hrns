@@ -26,6 +26,7 @@ func main() {
 		map[string]agent.Tool{
 			"read_file":  agent.ReadFileTool,
 			"list_files": agent.ListFilesTool,
+			"write_file": agent.WriteFileTool,
 		},
 	)
 
