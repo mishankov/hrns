@@ -4,6 +4,7 @@ import "github.com/fatih/color"
 
 var reasoningColor = color.RGB(150, 150, 150)
 var responseColor = color.New()
+var errorColor = color.New(color.FgRed)
 
 var toolNameColor = color.New(color.FgRed)
 var toolArgsColor = color.New(color.FgHiYellow)
@@ -26,6 +27,10 @@ func PrintToolCall(name string, args any) {
 	toolNameColor.Print(name)
 	toolArgsColor.Print(" ", args)
 	PrintNewLine()
+}
+
+func PrintError(error string) {
+	errorColor.Print(error)
 }
 
 func PrintNewLine() {

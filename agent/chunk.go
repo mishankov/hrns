@@ -9,6 +9,7 @@ const (
 	ChunkTypeToolCallStart  ChunkType = "tool_call_start"
 	ChunkTypeToolCallError  ChunkType = "tool_call_error"
 	ChunkTypeToolCallResult ChunkType = "tool_call_result"
+	ChunkTypeEnd            ChunkType = "end"
 )
 
 type Chunk struct {
@@ -60,5 +61,11 @@ func NewChunkToolCallResult(name string, result string) Chunk {
 		Type:     ChunkTypeToolCallResult,
 		ToolName: name,
 		Text:     result,
+	}
+}
+
+func NewChunkEnd() Chunk {
+	return Chunk{
+		Type: ChunkTypeEnd,
 	}
 }

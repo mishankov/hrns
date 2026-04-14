@@ -14,7 +14,7 @@ type Agent struct {
 	systemPrompt string
 	model        string
 	tools        map[string]Tool
-	chunkCh      chan<- Chunk
+	chunkCh      chan Chunk
 }
 
 func New(openAIClient *openai.Client, systemPrompt, model string, tools map[string]Tool) *Agent {
@@ -23,7 +23,7 @@ func New(openAIClient *openai.Client, systemPrompt, model string, tools map[stri
 		systemPrompt: systemPrompt,
 		model:        model,
 		tools:        tools,
-		chunkCh:      make(chan<- Chunk),
+		chunkCh:      make(chan Chunk),
 	}
 }
 
@@ -144,6 +144,12 @@ func (a *Agent) RunLoop(ctx context.Context, messages []openai.ChatCompletionMes
 			break
 		}
 	}
+
+	a.sendChunk(NewChunkEnd())
+}
+
+func (a *Agent) Chunks() chan Chunk {
+	return a.chunkCh
 }
 
 func (a *Agent) sendChunk(chunk Chunk) {
