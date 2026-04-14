@@ -27,7 +27,6 @@ func main() {
 	agnt := agent.New(
 		&client,
 		"You are a coding assistant that talks like a pirate.",
-		"z-ai/glm-5.1",
 		map[string]agent.Tool{
 			"read_file": agent.NewTool(
 				"Reads file from filesystem",

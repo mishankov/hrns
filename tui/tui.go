@@ -26,7 +26,7 @@ func (app *TUIApp) Run(ctx context.Context, agnt agent.Agent) {
 		messageText, _ := reader.ReadString('\n')
 		messages = append(messages, openai.UserMessage(messageText))
 
-		go agnt.RunLoop(ctx, messages)
+		go agnt.RunLoop(ctx, messages, "z-ai/glm-5.1")
 
 		for chunk := range agnt.Chunks() {
 			toBreak := false

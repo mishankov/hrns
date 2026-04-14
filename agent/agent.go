@@ -17,17 +17,16 @@ type Agent struct {
 	chunkCh      chan Chunk
 }
 
-func New(openAIClient *openai.Client, systemPrompt, model string, tools map[string]Tool) *Agent {
+func New(openAIClient *openai.Client, systemPrompt string, tools map[string]Tool) *Agent {
 	return &Agent{
 		openAIClient: openAIClient,
 		systemPrompt: systemPrompt,
-		model:        model,
 		tools:        tools,
 		chunkCh:      make(chan Chunk),
 	}
 }
 
-func (a *Agent) RunLoop(ctx context.Context, messages []openai.ChatCompletionMessageParamUnion) {
+func (a *Agent) RunLoop(ctx context.Context, messages []openai.ChatCompletionMessageParamUnion, model string) {
 	// Creating messages with system propt as first messages
 	messages = append([]openai.ChatCompletionMessageParamUnion{
 		openai.SystemMessage(a.systemPrompt),
@@ -66,7 +65,7 @@ func (a *Agent) RunLoop(ctx context.Context, messages []openai.ChatCompletionMes
 		stream := a.openAIClient.Chat.Completions.NewStreaming(ctx, openai.ChatCompletionNewParams{
 			Messages: messages,
 			Tools:    tools,
-			Model:    a.model,
+			Model:    model,
 		})
 
 		// Creating accumulator to accumulate model response chunks into single object
