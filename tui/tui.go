@@ -22,7 +22,7 @@ func New() *TUIApp {
 func (app *TUIApp) Run(ctx context.Context, agnt agent.Agent) {
 	messages := []openai.ChatCompletionMessageParamUnion{}
 
-	model := "openai/gpt-5.4-nano"
+	model := "glm-5.1"
 
 	terminal.PrintHarnessMessage("HRNS agent. dev")
 	terminal.PrintHarnessMessage("Model: " + model)
@@ -56,7 +56,9 @@ func (app *TUIApp) Run(ctx context.Context, agnt agent.Agent) {
 			toBreak := false
 
 			if chunk.Type != lastChunkType {
-				terminal.PrintNewLine()
+				if !(slices.Contains([]agent.ChunkType{agent.ChunkTypeToolCallResult, agent.ChunkTypeToolCallError, agent.ChunkTypeToolCallStart}, lastChunkType) && slices.Contains([]agent.ChunkType{agent.ChunkTypeToolCallResult, agent.ChunkTypeToolCallError, agent.ChunkTypeToolCallStart}, chunk.Type)) {
+					terminal.PrintNewLine()
+				}
 
 				if slices.Contains([]agent.ChunkType{agent.ChunkTypeMessage, agent.ChunkTypeReasoning}, lastChunkType) {
 					terminal.PrintNewLine()
@@ -70,11 +72,14 @@ func (app *TUIApp) Run(ctx context.Context, agnt agent.Agent) {
 				terminal.PrintReasoningChunc(chunk.Text)
 			case agent.ChunkTypeToolCallStart:
 				terminal.PrintToolCall(chunk.ToolName, chunk.ToolArgs)
-			case agent.ChunkTypeToolCallResult:
+			case agent.ChunkTypeToolCallResult, agent.ChunkTypeToolCallError:
+				func() {}()
 			case agent.ChunkTypeError:
 				terminal.PrintError(chunk.Text)
 			case agent.ChunkTypeEnd:
 				toBreak = true
+			default:
+				terminal.PrintHarnessMessage("other chunk " + string(chunk.Type))
 			}
 
 			lastChunkType = chunk.Type
