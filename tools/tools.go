@@ -1,4 +1,4 @@
-package agent
+package tools
 
 import (
 	"bytes"
@@ -10,11 +10,13 @@ import (
 	"os/exec"
 	"path"
 	"runtime"
+
+	"github.com/mishankov/hrns/agent"
 )
 
-var ReadFileTool = NewTool(
+var ReadFileTool = agent.NewTool(
 	"Reads file from filesystem",
-	[]ToolArgument{{Name: "fileName", Type: "string"}},
+	[]agent.ToolArgument{{Name: "fileName", Type: "string"}},
 	func(args map[string]any) string {
 		// TODO: make safe type assertions
 		dat, err := os.ReadFile(args["fileName"].(string))
@@ -26,9 +28,9 @@ var ReadFileTool = NewTool(
 	},
 )
 
-var ListFilesTool = NewTool(
+var ListFilesTool = agent.NewTool(
 	"Lists files in directory using glob pattern",
-	[]ToolArgument{{Name: "dir", Type: "string"}, {Name: "globPattern", Type: "string"}},
+	[]agent.ToolArgument{{Name: "dir", Type: "string"}, {Name: "globPattern", Type: "string"}},
 	func(args map[string]any) string {
 		// TODO: make safe type assertions
 		root := os.DirFS(args["dir"].(string))
@@ -53,9 +55,9 @@ var ListFilesTool = NewTool(
 	},
 )
 
-var WriteFileTool = NewTool(
+var WriteFileTool = agent.NewTool(
 	"Replaces first occurence of oldString with newString in a file",
-	[]ToolArgument{{Name: "fileName", Type: "string"}, {Name: "oldString", Type: "string"}, {Name: "newString", Type: "string"}},
+	[]agent.ToolArgument{{Name: "fileName", Type: "string"}, {Name: "oldString", Type: "string"}, {Name: "newString", Type: "string"}},
 	func(args map[string]any) string {
 		// TODO: make safe type assertions
 		fileName := args["fileName"].(string)
@@ -85,9 +87,9 @@ var WriteFileTool = NewTool(
 	},
 )
 
-var CommandTool = NewTool(
+var CommandTool = agent.NewTool(
 	"Runs shell command",
-	[]ToolArgument{{Name: "command", Type: "string"}},
+	[]agent.ToolArgument{{Name: "command", Type: "string"}},
 	func(args map[string]any) string {
 		// TODO: make safe type assertions
 		command := args["command"].(string)

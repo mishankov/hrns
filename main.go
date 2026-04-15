@@ -5,6 +5,7 @@ import (
 	"os"
 
 	"github.com/mishankov/hrns/agent"
+	"github.com/mishankov/hrns/tools"
 	"github.com/mishankov/hrns/tui"
 	"github.com/openai/openai-go/v3"
 	"github.com/openai/openai-go/v3/option"
@@ -24,10 +25,10 @@ func main() {
 		&client,
 		"You are a coding assistant that talks like a pirate.",
 		map[string]agent.Tool{
-			"read_file":   agent.ReadFileTool,
-			"list_files":  agent.ListFilesTool,
-			"write_file":  agent.WriteFileTool,
-			"run_command": agent.CommandTool,
+			"read_file":   tools.ReadFileTool,
+			"list_files":  tools.ListFilesTool,
+			"write_file":  tools.WriteFileTool,
+			"run_command": tools.CommandTool,
 		},
 	)
 
