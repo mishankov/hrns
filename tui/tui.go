@@ -39,6 +39,9 @@ func (app *TUIApp) Run(ctx context.Context, agnt agent.Agent) {
 			case "/model":
 				model = strings.TrimSpace(commandSplited[1])
 				PrintHarnessMessage("Model changed to " + model)
+			case "/new":
+				messages = []openai.ChatCompletionMessageParamUnion{}
+				PrintHarnessMessage("New session started")
 			default:
 				PrintError("unknown command: " + commandSplited[0])
 			}
