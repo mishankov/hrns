@@ -81,6 +81,10 @@ func (a *Agent) RunLoop(ctx context.Context, messages []openai.ChatCompletionMes
 			chunk := stream.Current()
 			accumulator.AddChunk(chunk)
 
+			if len(chunk.Choices) == 0 {
+				continue
+			}
+
 			if chunk.Choices[0].Delta.Content != "" {
 				// Process regular chunk
 				a.sendChunk(NewChunkMessage(chunk.Choices[0].Delta.Content))
