@@ -43,7 +43,10 @@ func (app *TUIApp) Run(ctx context.Context, agnt agent.Agent) {
 				messages = []openai.ChatCompletionMessageParamUnion{}
 				PrintHarnessMessage("New session started")
 			case "/help":
-				PrintHarnessMessage("Available commands: /model <model>, /new, /help")
+				PrintHarnessMessage("Available commands:")
+				PrintHarnessMessage("/model <model> - change model")
+				PrintHarnessMessage("/new - start new session")
+				PrintHarnessMessage("/help - show this help")
 			default:
 				PrintError("unknown command: " + commandSplited[0])
 			}
