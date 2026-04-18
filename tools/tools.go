@@ -4,8 +4,10 @@ import (
 	"bytes"
 	"encoding/json"
 	"errors"
+	"io"
 	"io/fs"
 	"log"
+	"net/http"
 	"os"
 	"os/exec"
 	"path"
@@ -107,5 +109,27 @@ var CommandTool = agent.NewSimpleTool(
 		}
 
 		return string(output)
+	},
+)
+
+var WebFetchTool = agent.NewSimpleTool(
+	"Fetches content from URL",
+	[]agent.ToolArgument{{Name: "url", Type: "string"}},
+	func(args map[string]any) string {
+		// TODO: make safe type assertions
+		url := args["url"].(string)
+
+		resp, err := http.Get(url)
+		if err != nil {
+			return "ERROR: tools calling error: " + err.Error()
+		}
+		defer resp.Body.Close()
+
+		body, err := io.ReadAll(resp.Body)
+		if err != nil {
+			return "ERROR: tools calling error: " + err.Error()
+		}
+
+		return string(body)
 	},
 )

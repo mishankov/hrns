@@ -29,6 +29,7 @@ func main() {
 			"list_files":  tools.ListFilesTool,
 			"write_file":  tools.WriteFileTool,
 			"run_command": tools.CommandTool,
+			"web_fetch":   tools.WebFetchTool,
 		},
 	)
 
