@@ -12,6 +12,7 @@ import (
 	"os/exec"
 	"path"
 	"runtime"
+	"time"
 
 	"github.com/mishankov/hrns/agent"
 )
@@ -119,7 +120,11 @@ var WebFetchTool = agent.NewSimpleTool(
 		// TODO: make safe type assertions
 		url := args["url"].(string)
 
-		resp, err := http.Get(url)
+		client := http.Client{
+			Timeout: 1 * time.Minute,
+		}
+
+		resp, err := client.Get(url)
 		if err != nil {
 			return "ERROR: tools calling error: " + err.Error()
 		}
