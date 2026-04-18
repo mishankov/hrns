@@ -14,7 +14,7 @@ import (
 	"github.com/mishankov/hrns/agent"
 )
 
-var ReadFileTool = agent.NewTool(
+var ReadFileTool = agent.NewSimpleTool(
 	"Reads file from filesystem",
 	[]agent.ToolArgument{{Name: "fileName", Type: "string"}},
 	func(args map[string]any) string {
@@ -28,7 +28,7 @@ var ReadFileTool = agent.NewTool(
 	},
 )
 
-var ListFilesTool = agent.NewTool(
+var ListFilesTool = agent.NewSimpleTool(
 	"Lists files in directory using glob pattern",
 	[]agent.ToolArgument{{Name: "dir", Type: "string"}, {Name: "globPattern", Type: "string"}},
 	func(args map[string]any) string {
@@ -55,7 +55,7 @@ var ListFilesTool = agent.NewTool(
 	},
 )
 
-var WriteFileTool = agent.NewTool(
+var WriteFileTool = agent.NewSimpleTool(
 	"Replaces first occurence of oldString with newString in a file",
 	[]agent.ToolArgument{{Name: "fileName", Type: "string"}, {Name: "oldString", Type: "string"}, {Name: "newString", Type: "string"}},
 	func(args map[string]any) string {
@@ -87,7 +87,7 @@ var WriteFileTool = agent.NewTool(
 	},
 )
 
-var CommandTool = agent.NewTool(
+var CommandTool = agent.NewSimpleTool(
 	"Runs shell command",
 	[]agent.ToolArgument{{Name: "command", Type: "string"}},
 	func(args map[string]any) string {

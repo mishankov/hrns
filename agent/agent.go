@@ -39,7 +39,7 @@ func (a *Agent) RunLoop(ctx context.Context, messages []openai.ChatCompletionMes
 	for name, tool := range a.tools {
 		properties := map[string]map[string]string{}
 		required := []string{}
-		for _, argument := range tool.arguments {
+		for _, argument := range tool.Arguments() {
 			properties[argument.Name] = map[string]string{
 				"type": argument.Type,
 			}
@@ -57,7 +57,7 @@ func (a *Agent) RunLoop(ctx context.Context, messages []openai.ChatCompletionMes
 				Function: shared.FunctionDefinitionParam{
 					Name: name,
 					Description: param.Opt[string]{
-						Value: tool.description,
+						Value: tool.Description(),
 					},
 					Parameters: parameters,
 				},
@@ -138,7 +138,7 @@ func (a *Agent) RunLoop(ctx context.Context, messages []openai.ChatCompletionMes
 				a.sendChunk(NewChunkToolCallStart(toolCall.Function.Name, args))
 
 				// Calling tool here
-				result := tool.function(args)
+				result := tool.Run(args)
 
 				messages = append(
 					messages,

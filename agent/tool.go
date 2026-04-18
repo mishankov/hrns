@@ -4,12 +4,30 @@ type ToolArgument struct {
 	Name, Type string
 }
 
-type Tool struct {
+type Tool interface {
+	Description() string
+	Arguments() []ToolArgument
+	Run(args map[string]any) string
+}
+
+type SimpleTool struct {
 	description string
 	arguments   []ToolArgument
 	function    func(args map[string]any) string
 }
 
-func NewTool(description string, arguments []ToolArgument, function func(args map[string]any) string) Tool {
-	return Tool{description, arguments, function}
+func NewSimpleTool(description string, arguments []ToolArgument, function func(args map[string]any) string) SimpleTool {
+	return SimpleTool{description, arguments, function}
+}
+
+func (t SimpleTool) Description() string {
+	return t.description
+}
+
+func (t SimpleTool) Arguments() []ToolArgument {
+	return t.arguments
+}
+
+func (t SimpleTool) Run(args map[string]any) string {
+	return t.function(args)
 }
