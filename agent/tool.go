@@ -7,7 +7,7 @@ type ToolArgument struct {
 type Tool interface {
 	Description() string
 	Arguments() []ToolArgument
-	Run(args map[string]any) string
+	Call(args map[string]any) string
 }
 
 type SimpleTool struct {
@@ -28,6 +28,6 @@ func (t SimpleTool) Arguments() []ToolArgument {
 	return t.arguments
 }
 
-func (t SimpleTool) Run(args map[string]any) string {
+func (t SimpleTool) Call(args map[string]any) string {
 	return t.function(args)
 }

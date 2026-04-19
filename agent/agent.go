@@ -142,7 +142,7 @@ func (a *Agent) RunLoop(ctx context.Context, messages []openai.ChatCompletionMes
 				a.sendChunk(NewChunkToolCallStart(toolCall.Function.Name, args))
 
 				// Calling tool here
-				result := tool.Run(args)
+				result := tool.Call(args)
 
 				messages = append(
 					messages,
