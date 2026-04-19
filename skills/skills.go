@@ -12,7 +12,7 @@ import (
 
 const DefaultRootPath = "~/.agents/skills"
 
-func DisocoverSkillFile(rootPath string) ([]string, error) {
+func DiscoverSkillFiles(rootPath string) ([]string, error) {
 	if strings.HasPrefix(rootPath, "~/") {
 		userHomeDir, err := os.UserHomeDir()
 		if err != nil {
@@ -83,4 +83,22 @@ func GetSkillData(path string) (*Skill, error) {
 		Name:        metadata.Name,
 		Description: metadata.Description,
 	}, nil
+}
+
+func LoadAllSkills(rootPath string) ([]Skill, error) {
+	files, err := DiscoverSkillFiles(rootPath)
+	if err != nil {
+		return nil, err
+	}
+
+	skills := make([]Skill, 0, len(files))
+	for _, file := range files {
+		skill, err := GetSkillData(file)
+		if err != nil {
+			return nil, err
+		}
+		skills = append(skills, *skill)
+	}
+
+	return skills, nil
 }

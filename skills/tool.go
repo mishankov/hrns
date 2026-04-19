@@ -15,23 +15,28 @@ func NewLoadSkillTool(skills []Skill) *LoadSkillTool {
 }
 
 func (t *LoadSkillTool) Description() string {
-	return "Loads full skill body"
+	return "Loads full skill body by its name"
 }
 
 func (t *LoadSkillTool) Arguments() []agent.ToolArgument {
 	return []agent.ToolArgument{
-		{Name: "pathToSkill", Type: "string"},
+		{Name: "name", Type: "string"},
 	}
 }
 
 func (t *LoadSkillTool) Call(args map[string]any) string {
 	// TODO: make safe type assertions
-	pathToSkill := args["fileName"].(string)
+	name := args["name"].(string)
 
-	data, err := os.ReadFile(pathToSkill)
-	if err != nil {
-		return "ERROR: loading skill file:" + err.Error()
+	for _, skill := range t.skills {
+		if skill.Name == name {
+			data, err := os.ReadFile(skill.Path)
+			if err != nil {
+				return "ERROR: loading skill file:" + err.Error()
+			}
+			return string(data)
+		}
 	}
 
-	return string(data)
+	return "ERROR: unknown skill name"
 }
