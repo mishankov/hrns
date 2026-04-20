@@ -7,7 +7,7 @@ import (
 	"slices"
 	"strings"
 
-	"github.com/mishankov/hrns/agent"
+	"github.com/mishankov/hrns/loop"
 	"github.com/openai/openai-go/v3"
 )
 
@@ -18,12 +18,12 @@ func New() *TUIApp {
 	return &TUIApp{}
 }
 
-func (app *TUIApp) Run(ctx context.Context, agnt agent.Agent) {
+func (app *TUIApp) Run(ctx context.Context, agnt loop.Loop) {
 	messages := []openai.ChatCompletionMessageParamUnion{}
 
 	model := "glm-5.1"
 
-	PrintHarnessMessage("HRNS agent. dev")
+	PrintHarnessMessage("HRNS loop. dev")
 	PrintHarnessMessage("Model: " + model)
 
 	for {
@@ -58,32 +58,32 @@ func (app *TUIApp) Run(ctx context.Context, agnt agent.Agent) {
 
 		go agnt.RunLoop(ctx, messages, model)
 
-		lastChunkType := agent.ChunkType("")
+		lastChunkType := loop.ChunkType("")
 		for chunk := range agnt.Chunks() {
 			toBreak := false
 
 			if chunk.Type != lastChunkType {
-				if !(slices.Contains([]agent.ChunkType{agent.ChunkTypeToolCallResult, agent.ChunkTypeToolCallError, agent.ChunkTypeToolCallStart}, lastChunkType) && slices.Contains([]agent.ChunkType{agent.ChunkTypeToolCallResult, agent.ChunkTypeToolCallError, agent.ChunkTypeToolCallStart}, chunk.Type)) {
+				if !(slices.Contains([]loop.ChunkType{loop.ChunkTypeToolCallResult, loop.ChunkTypeToolCallError, loop.ChunkTypeToolCallStart}, lastChunkType) && slices.Contains([]loop.ChunkType{loop.ChunkTypeToolCallResult, loop.ChunkTypeToolCallError, loop.ChunkTypeToolCallStart}, chunk.Type)) {
 					PrintNewLine()
 				}
 
-				if slices.Contains([]agent.ChunkType{agent.ChunkTypeMessage, agent.ChunkTypeReasoning}, lastChunkType) {
+				if slices.Contains([]loop.ChunkType{loop.ChunkTypeMessage, loop.ChunkTypeReasoning}, lastChunkType) {
 					PrintNewLine()
 				}
 			}
 
 			switch chunk.Type {
-			case agent.ChunkTypeMessage:
+			case loop.ChunkTypeMessage:
 				PrintResponseChunc(chunk.Text)
-			case agent.ChunkTypeReasoning:
+			case loop.ChunkTypeReasoning:
 				PrintReasoningChunc(chunk.Text)
-			case agent.ChunkTypeToolCallStart:
+			case loop.ChunkTypeToolCallStart:
 				PrintToolCall(chunk.ToolName, chunk.ToolArgs)
-			case agent.ChunkTypeToolCallResult, agent.ChunkTypeToolCallError:
+			case loop.ChunkTypeToolCallResult, loop.ChunkTypeToolCallError:
 				func() {}()
-			case agent.ChunkTypeError:
+			case loop.ChunkTypeError:
 				PrintError(chunk.Text)
-			case agent.ChunkTypeEnd:
+			case loop.ChunkTypeEnd:
 				toBreak = true
 			default:
 				PrintHarnessMessage("other chunk " + string(chunk.Type))

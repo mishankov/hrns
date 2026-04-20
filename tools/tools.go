@@ -14,12 +14,12 @@ import (
 	"runtime"
 	"time"
 
-	"github.com/mishankov/hrns/agent"
+	"github.com/mishankov/hrns/loop"
 )
 
-var ReadFileTool = agent.NewSimpleTool(
+var ReadFileTool = loop.NewSimpleTool(
 	"Reads file from filesystem",
-	[]agent.ToolArgument{{Name: "fileName", Type: "string"}},
+	[]loop.ToolArgument{{Name: "fileName", Type: "string"}},
 	func(args map[string]any) string {
 		// TODO: make safe type assertions
 		dat, err := os.ReadFile(args["fileName"].(string))
@@ -31,9 +31,9 @@ var ReadFileTool = agent.NewSimpleTool(
 	},
 )
 
-var ListFilesTool = agent.NewSimpleTool(
+var ListFilesTool = loop.NewSimpleTool(
 	"Lists files in directory using glob pattern",
-	[]agent.ToolArgument{{Name: "dir", Type: "string"}, {Name: "globPattern", Type: "string"}},
+	[]loop.ToolArgument{{Name: "dir", Type: "string"}, {Name: "globPattern", Type: "string"}},
 	func(args map[string]any) string {
 		// TODO: make safe type assertions
 		root := os.DirFS(args["dir"].(string))
@@ -58,9 +58,9 @@ var ListFilesTool = agent.NewSimpleTool(
 	},
 )
 
-var WriteFileTool = agent.NewSimpleTool(
+var WriteFileTool = loop.NewSimpleTool(
 	"Replaces first occurence of oldString with newString in a file",
-	[]agent.ToolArgument{{Name: "fileName", Type: "string"}, {Name: "oldString", Type: "string"}, {Name: "newString", Type: "string"}},
+	[]loop.ToolArgument{{Name: "fileName", Type: "string"}, {Name: "oldString", Type: "string"}, {Name: "newString", Type: "string"}},
 	func(args map[string]any) string {
 		// TODO: make safe type assertions
 		fileName := args["fileName"].(string)
@@ -90,9 +90,9 @@ var WriteFileTool = agent.NewSimpleTool(
 	},
 )
 
-var CommandTool = agent.NewSimpleTool(
+var CommandTool = loop.NewSimpleTool(
 	"Runs shell command",
-	[]agent.ToolArgument{{Name: "command", Type: "string"}},
+	[]loop.ToolArgument{{Name: "command", Type: "string"}},
 	func(args map[string]any) string {
 		// TODO: make safe type assertions
 		command := args["command"].(string)
@@ -113,9 +113,9 @@ var CommandTool = agent.NewSimpleTool(
 	},
 )
 
-var WebFetchTool = agent.NewSimpleTool(
+var WebFetchTool = loop.NewSimpleTool(
 	"Fetches content from URL",
-	[]agent.ToolArgument{{Name: "url", Type: "string"}},
+	[]loop.ToolArgument{{Name: "url", Type: "string"}},
 	func(args map[string]any) string {
 		// TODO: make safe type assertions
 		url := args["url"].(string)

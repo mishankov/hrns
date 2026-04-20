@@ -1,4 +1,4 @@
-package agent
+package loop
 
 import (
 	"context"
@@ -9,7 +9,7 @@ import (
 	"github.com/openai/openai-go/v3/shared"
 )
 
-type Agent struct {
+type Loop struct {
 	openAIClient *openai.Client
 	systemPrompt string
 	model        string
@@ -18,8 +18,8 @@ type Agent struct {
 	chunkCh      chan Chunk
 }
 
-func New(openAIClient *openai.Client, systemPrompt string, tools map[string]Tool) *Agent {
-	return &Agent{
+func New(openAIClient *openai.Client, systemPrompt string, tools map[string]Tool) *Loop {
+	return &Loop{
 		openAIClient: openAIClient,
 		systemPrompt: systemPrompt,
 		tools:        tools,
@@ -28,7 +28,7 @@ func New(openAIClient *openai.Client, systemPrompt string, tools map[string]Tool
 	}
 }
 
-func (a *Agent) RunLoop(ctx context.Context, messages []openai.ChatCompletionMessageParamUnion, model string) {
+func (a *Loop) RunLoop(ctx context.Context, messages []openai.ChatCompletionMessageParamUnion, model string) {
 	// Creating messages with system propt as first messages
 	messages = append([]openai.ChatCompletionMessageParamUnion{
 		openai.SystemMessage(a.systemPrompt),
@@ -162,14 +162,14 @@ func (a *Agent) RunLoop(ctx context.Context, messages []openai.ChatCompletionMes
 	a.sendChunk(NewChunkEnd())
 }
 
-func (a *Agent) Chunks() chan Chunk {
+func (a *Loop) Chunks() chan Chunk {
 	return a.chunkCh
 }
 
-func (a *Agent) Messages() []openai.ChatCompletionMessageParamUnion {
+func (a *Loop) Messages() []openai.ChatCompletionMessageParamUnion {
 	return a.messages
 }
 
-func (a *Agent) sendChunk(chunk Chunk) {
+func (a *Loop) sendChunk(chunk Chunk) {
 	a.chunkCh <- chunk
 }

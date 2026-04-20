@@ -1,4 +1,4 @@
-package agent
+package loop
 
 type ToolArgument struct {
 	Name, Type string

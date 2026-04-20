@@ -3,7 +3,7 @@ package skills
 import (
 	"os"
 
-	"github.com/mishankov/hrns/agent"
+	"github.com/mishankov/hrns/loop"
 )
 
 type LoadSkillTool struct {
@@ -18,8 +18,8 @@ func (t *LoadSkillTool) Description() string {
 	return "Loads full skill body by its name"
 }
 
-func (t *LoadSkillTool) Arguments() []agent.ToolArgument {
-	return []agent.ToolArgument{
+func (t *LoadSkillTool) Arguments() []loop.ToolArgument {
+	return []loop.ToolArgument{
 		{Name: "name", Type: "string"},
 	}
 }

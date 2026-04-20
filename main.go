@@ -5,7 +5,7 @@ import (
 	"log"
 	"os"
 
-	"github.com/mishankov/hrns/agent"
+	"github.com/mishankov/hrns/loop"
 	"github.com/mishankov/hrns/skills"
 	"github.com/mishankov/hrns/tools"
 	"github.com/mishankov/hrns/tui"
@@ -39,10 +39,10 @@ func main() {
 		systemPrompt += "\n You can load them with the `load_skill` tool."
 	}
 
-	agnt := agent.New(
+	agnt := loop.New(
 		&client,
 		systemPrompt,
-		map[string]agent.Tool{
+		map[string]loop.Tool{
 			"read_file":   tools.ReadFileTool,
 			"list_files":  tools.ListFilesTool,
 			"write_file":  tools.WriteFileTool,
