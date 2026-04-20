@@ -23,7 +23,7 @@ func main() {
 		option.WithBaseURL(baseUrl),
 	)
 
-	loadedSkills, err := skills.LoadAllSkills(skills.DefaultRootPath)
+	loadedSkills, err := skills.LoadAllSkills([]string{skills.DefaultGlobalRootPath, skills.DefaultLocalRootPath})
 	if err != nil {
 		log.Fatalf("failed to load skills: %v", err)
 	}

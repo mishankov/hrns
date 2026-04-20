@@ -1,6 +1,7 @@
 package skills
 
 import (
+	"errors"
 	"fmt"
 	"log"
 	"os"
@@ -10,44 +11,50 @@ import (
 	"github.com/adrg/frontmatter"
 )
 
-const DefaultRootPath = "~/.agents/skills"
+const DefaultGlobalRootPath = "~/.agents/skills"
+const DefaultLocalRootPath = "./.agents/skills"
 
-func DiscoverSkillFiles(rootPath string) ([]string, error) {
-	if strings.HasPrefix(rootPath, "~/") {
-		userHomeDir, err := os.UserHomeDir()
-		if err != nil {
-			return []string{}, fmt.Errorf("Error getting user home dir: %w", err)
-		}
-		rootPath = filepath.Join(userHomeDir, rootPath[2:])
-	}
+func DiscoverSkillFiles(rootPaths []string) ([]string, error) {
 	files := []string{}
-
-	entries, err := os.ReadDir(rootPath)
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	for _, entry := range entries {
-		path := filepath.Join(rootPath, entry.Name())
-
-		// Skip file in root
-		if !entry.IsDir() {
-			continue
+	for _, rootPath := range rootPaths {
+		if strings.HasPrefix(rootPath, "~/") {
+			userHomeDir, err := os.UserHomeDir()
+			if err != nil {
+				return []string{}, fmt.Errorf("Error getting user home dir: %w", err)
+			}
+			rootPath = filepath.Join(userHomeDir, rootPath[2:])
 		}
 
-		// If it's a directory, go one level deep
-		subEntries, err := os.ReadDir(path)
+		entries, err := os.ReadDir(rootPath)
 		if err != nil {
-			return []string{}, fmt.Errorf("Error reading %s: %w\n", path, err)
+			if errors.Is(err, os.ErrNotExist) {
+				continue
+			}
+			log.Fatal(err)
 		}
 
-		for _, subEntry := range subEntries {
-			// Only list files at this level, don't recurse further
-			if !subEntry.IsDir() {
-				if subEntry.Name() == "SKILL.md" {
-					files = append(files, filepath.Join(path, subEntry.Name()))
-				}
+		for _, entry := range entries {
+			path := filepath.Join(rootPath, entry.Name())
 
+			// Skip file in root
+			if !entry.IsDir() {
+				continue
+			}
+
+			// If it's a directory, go one level deep
+			subEntries, err := os.ReadDir(path)
+			if err != nil {
+				return []string{}, fmt.Errorf("Error reading %s: %w\n", path, err)
+			}
+
+			for _, subEntry := range subEntries {
+				// Only list files at this level, don't recurse further
+				if !subEntry.IsDir() {
+					if subEntry.Name() == "SKILL.md" {
+						files = append(files, filepath.Join(path, subEntry.Name()))
+					}
+
+				}
 			}
 		}
 	}
@@ -85,8 +92,8 @@ func GetSkillData(path string) (*Skill, error) {
 	}, nil
 }
 
-func LoadAllSkills(rootPath string) ([]Skill, error) {
-	files, err := DiscoverSkillFiles(rootPath)
+func LoadAllSkills(rootPaths []string) ([]Skill, error) {
+	files, err := DiscoverSkillFiles(rootPaths)
 	if err != nil {
 		return nil, err
 	}
