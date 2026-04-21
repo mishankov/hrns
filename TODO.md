@@ -1,5 +1,6 @@
 - [ ] agents
-- [ ] skills
+- [ ] subagents
+- [x] skills
 - [ ] permissons
 - [ ] sessions
 

@@ -20,14 +20,34 @@ type Client struct {
 	Headers    map[string]string
 }
 
-func NewClient(baseURL, apiKey string) *Client {
-	return &Client{
-		BaseURL: strings.TrimRight(baseURL, "/"),
+type ClientOption func(*Client)
+
+func WithHTTPClient(httpClient *http.Client) ClientOption {
+	return func(c *Client) {
+		c.HTTPClient = httpClient
+	}
+}
+
+func WithBaseURL(baseURL string) ClientOption {
+	return func(c *Client) {
+		c.BaseURL = strings.TrimRight(baseURL, "/")
+	}
+}
+
+func NewClient(apiKey string, opts ...ClientOption) *Client {
+	c := &Client{
+		BaseURL: "https://api.openai.com/v1",
 		APIKey:  apiKey,
 		HTTPClient: &http.Client{
 			Timeout: 5 * time.Minute,
 		},
 	}
+
+	for _, opt := range opts {
+		opt(c)
+	}
+
+	return c
 }
 
 func (c *Client) CreateChatCompletion(
