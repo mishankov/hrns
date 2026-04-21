@@ -34,10 +34,15 @@ func WithBaseURL(baseURL string) ClientOption {
 	}
 }
 
-func NewClient(apiKey string, opts ...ClientOption) *Client {
+func WithAPIKey(apiKey string) ClientOption {
+	return func(c *Client) {
+		c.APIKey = apiKey
+	}
+}
+
+func NewClient(opts ...ClientOption) *Client {
 	c := &Client{
 		BaseURL: "https://api.openai.com/v1",
-		APIKey:  apiKey,
 		HTTPClient: &http.Client{
 			Timeout: 5 * time.Minute,
 		},

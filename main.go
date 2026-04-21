@@ -17,7 +17,7 @@ func main() {
 
 	key, _ := os.LookupEnv("HRNS_KEY")
 	baseUrl, _ := os.LookupEnv("HRNS_BASE_URL")
-	client := openai.NewClient(key, openai.WithBaseURL(baseUrl))
+	client := openai.NewClient(openai.WithBaseURL(baseUrl), openai.WithAPIKey(key))
 
 	loadedSkills, err := skills.LoadAllSkills([]string{skills.DefaultGlobalRootPath, skills.DefaultLocalRootPath})
 	if err != nil {
