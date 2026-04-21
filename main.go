@@ -2,7 +2,9 @@ package main
 
 import (
 	"context"
+	"crypto/tls"
 	"log"
+	"net/http"
 	"os"
 
 	"github.com/mishankov/hrns/loop"
@@ -15,9 +17,19 @@ import (
 func main() {
 	ctx := context.Background()
 
-	key, _ := os.LookupEnv("HRNS_KEY")
-	baseUrl, _ := os.LookupEnv("HRNS_BASE_URL")
-	client := openai.NewClient(openai.WithBaseURL(baseUrl), openai.WithAPIKey(key))
+	key := os.Getenv("HRNS_KEY")
+	baseUrl := os.Getenv("HRNS_BASE_URL")
+	skipVerify := os.Getenv("HRNS_SKIP_VERIFY") == "true"
+	client := openai.NewClient(
+		openai.WithBaseURL(baseUrl),
+		openai.WithAPIKey(key),
+		openai.WithHTTPClient(
+			&http.Client{Transport: &http.Transport{
+				TLSClientConfig: &tls.Config{
+					InsecureSkipVerify: skipVerify,
+				},
+			}}),
+	)
 
 	loadedSkills, err := skills.LoadAllSkills([]string{skills.DefaultGlobalRootPath, skills.DefaultLocalRootPath})
 	if err != nil {
