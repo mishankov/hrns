@@ -8,7 +8,7 @@ import (
 	"strings"
 
 	"github.com/mishankov/hrns/loop"
-	"github.com/openai/openai-go/v3"
+	"github.com/mishankov/hrns/openai"
 )
 
 type TUIApp struct {
@@ -19,9 +19,9 @@ func New() *TUIApp {
 }
 
 func (app *TUIApp) Run(ctx context.Context, agnt loop.Loop) {
-	messages := []openai.ChatCompletionMessageParamUnion{}
+	messages := []openai.Message{}
 
-	model := "glm-5.1"
+	model := "kimi-k2.6"
 
 	PrintHarnessMessage("HRNS loop. dev")
 	PrintHarnessMessage("Model: " + model)
@@ -40,7 +40,7 @@ func (app *TUIApp) Run(ctx context.Context, agnt loop.Loop) {
 				model = strings.TrimSpace(commandSplited[1])
 				PrintHarnessMessage("Model changed to " + model)
 			case "/new":
-				messages = []openai.ChatCompletionMessageParamUnion{}
+				messages = []openai.Message{}
 				PrintHarnessMessage("New session started")
 			case "/help":
 				PrintHarnessMessage("Available commands:")

@@ -4,9 +4,7 @@ import (
 	"context"
 	"encoding/json"
 
-	"github.com/openai/openai-go/v3"
-	"github.com/openai/openai-go/v3/packages/param"
-	"github.com/openai/openai-go/v3/shared"
+	"github.com/mishankov/hrns/openai"
 )
 
 type Loop struct {
@@ -14,7 +12,7 @@ type Loop struct {
 	systemPrompt string
 	model        string
 	tools        map[string]Tool
-	messages     []openai.ChatCompletionMessageParamUnion
+	messages     []openai.Message
 	chunkCh      chan Chunk
 }
 
@@ -23,19 +21,19 @@ func New(openAIClient *openai.Client, systemPrompt string, tools map[string]Tool
 		openAIClient: openAIClient,
 		systemPrompt: systemPrompt,
 		tools:        tools,
-		messages:     []openai.ChatCompletionMessageParamUnion{},
+		messages:     []openai.Message{},
 		chunkCh:      make(chan Chunk),
 	}
 }
 
-func (a *Loop) RunLoop(ctx context.Context, messages []openai.ChatCompletionMessageParamUnion, model string) {
+func (a *Loop) RunLoop(ctx context.Context, messages []openai.Message, model string) {
 	// Creating messages with system propt as first messages
-	messages = append([]openai.ChatCompletionMessageParamUnion{
+	messages = append([]openai.Message{
 		openai.SystemMessage(a.systemPrompt),
 	}, messages...)
 
 	// Composing tools for agent
-	tools := []openai.ChatCompletionToolUnionParam{}
+	tools := []openai.Tool{}
 	for name, tool := range a.tools {
 		properties := map[string]map[string]string{}
 		required := []string{}
@@ -46,20 +44,15 @@ func (a *Loop) RunLoop(ctx context.Context, messages []openai.ChatCompletionMess
 			required = append(required, argument.Name)
 		}
 
-		parameters := shared.FunctionParameters{
-			"type":       "object",
-			"properties": properties,
-			"required":   required,
-		}
-
-		tools = append(tools, openai.ChatCompletionToolUnionParam{
-			OfFunction: &openai.ChatCompletionFunctionToolParam{
-				Function: shared.FunctionDefinitionParam{
-					Name: name,
-					Description: param.Opt[string]{
-						Value: tool.Description(),
-					},
-					Parameters: parameters,
+		tools = append(tools, openai.Tool{
+			Type: "function",
+			Function: map[string]any{
+				"name":        name,
+				"description": tool.Description(),
+				"parameters": map[string]any{
+					"type":       "object",
+					"properties": properties,
+					"required":   required,
 				},
 			},
 		})
@@ -67,50 +60,59 @@ func (a *Loop) RunLoop(ctx context.Context, messages []openai.ChatCompletionMess
 
 	for {
 		// Creating streaming chat completions object
-		stream := a.openAIClient.Chat.Completions.NewStreaming(ctx, openai.ChatCompletionNewParams{
+		stream, err := a.openAIClient.StreamChatCompletion(ctx, openai.ChatCompletionRequest{
 			Messages: messages,
 			Tools:    tools,
 			Model:    model,
 		})
+		if err != nil {
+			a.sendChunk(NewChunkError("error in LLM stream: " + err.Error()))
+			break
+		}
 
-		// Creating accumulator to accumulate model response chunks into single object
 		accumulator := openai.ChatCompletionAccumulator{}
 
 		// Reading from response stream
-		for stream.Next() {
-			chunk := stream.Current()
-			accumulator.AddChunk(chunk)
-
-			if len(chunk.Choices) == 0 {
+		for event := range stream {
+			if event.Error != nil {
+				a.sendChunk(NewChunkError("error in LLM stream: " + event.Error.Error()))
+				break
+			}
+			if event.Done || event.Data == nil {
 				continue
 			}
 
-			if chunk.Choices[0].Delta.Content != "" {
+			if len(event.Data.Choices) == 0 {
+				continue
+			}
+
+			chunk := event.Data
+			accumulator.AddChunk(*chunk)
+
+			delta := chunk.Choices[0].Delta
+			if delta == nil {
+				continue
+			}
+
+			if content := openai.MessageText(delta.Content); content != "" {
 				// Process regular chunk
-				a.sendChunk(NewChunkMessage(chunk.Choices[0].Delta.Content))
+				a.sendChunk(NewChunkMessage(content))
 			} else {
 				// Process reasoning chunk
-				var jsonChunk map[string]string
-
-				json.Unmarshal([]byte(chunk.Choices[0].Delta.RawJSON()), &jsonChunk)
-
-				if jsonChunk["reasoning"] != "" {
-					a.sendChunk(NewChunkReasoning(jsonChunk["reasoning"]))
+				if reasoning, _ := delta.Extra["reasoning"].(string); reasoning != "" {
+					a.sendChunk(NewChunkReasoning(reasoning))
 				}
 			}
 		}
 
-		if len(accumulator.Choices) > 0 {
-			messages = append(messages, accumulator.Choices[0].Message.ToParam())
-		}
-
-		if stream.Err() != nil {
-			a.sendChunk(NewChunkError("error in LLM stream: " + stream.Err().Error()))
+		choices := accumulator.Choices()
+		if len(choices) > 0 {
+			messages = append(messages, choices[0].Message)
 		}
 
 		// Tool calling
 		toolsCalled := false
-		for _, choice := range accumulator.Choices {
+		for _, choice := range choices {
 			for _, toolCall := range choice.Message.ToolCalls {
 				toolsCalled = true
 
@@ -166,7 +168,7 @@ func (a *Loop) Chunks() chan Chunk {
 	return a.chunkCh
 }
 
-func (a *Loop) Messages() []openai.ChatCompletionMessageParamUnion {
+func (a *Loop) Messages() []openai.Message {
 	return a.messages
 }
 

@@ -6,11 +6,10 @@ import (
 	"os"
 
 	"github.com/mishankov/hrns/loop"
+	"github.com/mishankov/hrns/openai"
 	"github.com/mishankov/hrns/skills"
 	"github.com/mishankov/hrns/tools"
 	"github.com/mishankov/hrns/tui"
-	"github.com/openai/openai-go/v3"
-	"github.com/openai/openai-go/v3/option"
 )
 
 func main() {
@@ -18,10 +17,7 @@ func main() {
 
 	key, _ := os.LookupEnv("HRNS_KEY")
 	baseUrl, _ := os.LookupEnv("HRNS_BASE_URL")
-	client := openai.NewClient(
-		option.WithAPIKey(key),
-		option.WithBaseURL(baseUrl),
-	)
+	client := openai.NewClient(baseUrl, key)
 
 	loadedSkills, err := skills.LoadAllSkills([]string{skills.DefaultGlobalRootPath, skills.DefaultLocalRootPath})
 	if err != nil {
@@ -40,7 +36,7 @@ func main() {
 	}
 
 	agnt := loop.New(
-		&client,
+		client,
 		systemPrompt,
 		map[string]loop.Tool{
 			"read_file":   tools.ReadFileTool,
