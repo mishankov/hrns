@@ -15,6 +15,11 @@ import (
 func TestRunLoopStreamsAssistantResponseAndStoresMessages(t *testing.T) {
 	t.Parallel()
 
+	initialMessages := []openai.Message{
+		openai.SystemMessage("system prompt"),
+		openai.UserMessage("Hi"),
+	}
+
 	streamer := &scriptedStreamer{
 		scripts: []streamScript{
 			{
@@ -26,7 +31,7 @@ func TestRunLoopStreamsAssistantResponseAndStoresMessages(t *testing.T) {
 		},
 	}
 
-	agent := loop.New(streamer, "system prompt", map[string]loop.Tool{
+	agent := loop.New(streamer, map[string]loop.Tool{
 		"echo": loop.NewSimpleTool(
 			"Echoes text",
 			[]loop.ToolArgument{{Name: "value", Type: "string"}},
@@ -34,7 +39,7 @@ func TestRunLoopStreamsAssistantResponseAndStoresMessages(t *testing.T) {
 		),
 	})
 
-	chunks := runLoop(t, agent, []openai.Message{openai.UserMessage("Hi")}, "test-model")
+	chunks := runLoop(t, agent, initialMessages, "test-model")
 
 	if got := chunkTypes(chunks); !reflect.DeepEqual(got, []loop.ChunkType{
 		loop.ChunkTypeMessage,
@@ -96,7 +101,7 @@ func TestRunLoopEmitsReasoningChunks(t *testing.T) {
 		},
 	}
 
-	agent := loop.New(streamer, "system prompt", nil)
+	agent := loop.New(streamer, nil)
 
 	chunks := runLoop(t, agent, []openai.Message{openai.UserMessage("Hi")}, "test-model")
 
@@ -117,6 +122,11 @@ func TestRunLoopEmitsReasoningChunks(t *testing.T) {
 
 func TestRunLoopExecutesToolCallsAndContinuesConversation(t *testing.T) {
 	t.Parallel()
+
+	initialMessages := []openai.Message{
+		openai.SystemMessage("system prompt"),
+		openai.UserMessage("Hi"),
+	}
 
 	tool := &spyTool{
 		description: "Echoes text",
@@ -159,9 +169,9 @@ func TestRunLoopExecutesToolCallsAndContinuesConversation(t *testing.T) {
 		},
 	}
 
-	agent := loop.New(streamer, "system prompt", map[string]loop.Tool{"echo": tool})
+	agent := loop.New(streamer, map[string]loop.Tool{"echo": tool})
 
-	chunks := runLoop(t, agent, []openai.Message{openai.UserMessage("Hi")}, "test-model")
+	chunks := runLoop(t, agent, initialMessages, "test-model")
 
 	if got := chunkTypes(chunks); !reflect.DeepEqual(got, []loop.ChunkType{
 		loop.ChunkTypeToolCallStart,
@@ -233,7 +243,7 @@ func TestRunLoopReportsUnknownToolErrors(t *testing.T) {
 		},
 	}
 
-	agent := loop.New(streamer, "system prompt", nil)
+	agent := loop.New(streamer, nil)
 
 	chunks := runLoop(t, agent, []openai.Message{openai.UserMessage("Hi")}, "test-model")
 
@@ -288,7 +298,7 @@ func TestRunLoopReportsInvalidToolArguments(t *testing.T) {
 		},
 	}
 
-	agent := loop.New(streamer, "system prompt", map[string]loop.Tool{
+	agent := loop.New(streamer, map[string]loop.Tool{
 		"echo": loop.NewSimpleTool("Echoes text", []loop.ToolArgument{{Name: "value", Type: "string"}}, func(args map[string]any) string {
 			return "unused"
 		}),
@@ -318,15 +328,20 @@ func TestRunLoopReportsInvalidToolArguments(t *testing.T) {
 func TestRunLoopEmitsErrorWhenStreamSetupFails(t *testing.T) {
 	t.Parallel()
 
+	initialMessages := []openai.Message{
+		openai.SystemMessage("system prompt"),
+		openai.UserMessage("Hi"),
+	}
+
 	streamer := &scriptedStreamer{
 		scripts: []streamScript{
 			{err: errors.New("boom")},
 		},
 	}
 
-	agent := loop.New(streamer, "system prompt", nil)
+	agent := loop.New(streamer, nil)
 
-	chunks := runLoop(t, agent, []openai.Message{openai.UserMessage("Hi")}, "test-model")
+	chunks := runLoop(t, agent, initialMessages, "test-model")
 
 	if got := chunkTypes(chunks); !reflect.DeepEqual(got, []loop.ChunkType{
 		loop.ChunkTypeError,
@@ -350,6 +365,11 @@ func TestRunLoopEmitsErrorWhenStreamSetupFails(t *testing.T) {
 func TestRunLoopEmitsErrorWhenStreamEventFails(t *testing.T) {
 	t.Parallel()
 
+	initialMessages := []openai.Message{
+		openai.SystemMessage("system prompt"),
+		openai.UserMessage("Hi"),
+	}
+
 	streamer := &scriptedStreamer{
 		scripts: []streamScript{
 			{
@@ -360,9 +380,9 @@ func TestRunLoopEmitsErrorWhenStreamEventFails(t *testing.T) {
 		},
 	}
 
-	agent := loop.New(streamer, "system prompt", nil)
+	agent := loop.New(streamer, nil)
 
-	chunks := runLoop(t, agent, []openai.Message{openai.UserMessage("Hi")}, "test-model")
+	chunks := runLoop(t, agent, initialMessages, "test-model")
 
 	if got := chunkTypes(chunks); !reflect.DeepEqual(got, []loop.ChunkType{
 		loop.ChunkTypeError,
