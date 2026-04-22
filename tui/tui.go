@@ -78,11 +78,10 @@ func (app *TUIApp) Run(ctx context.Context) {
 
 	agnt := loop.New(
 		client,
-		app.systemPrompt,
 		app.tools,
 	)
 
-	messages := []openai.Message{}
+	messages := []openai.Message{openai.SystemMessage(app.systemPrompt)}
 
 	PrintHarnessMessage("HRNS loop. dev")
 	PrintHarnessMessage("Provider: " + config.CurrentProvider)

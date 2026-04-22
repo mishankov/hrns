@@ -13,17 +13,15 @@ type ChatCompletionStreamer interface {
 
 type Loop struct {
 	openAIClient ChatCompletionStreamer
-	systemPrompt string
 	model        string
 	tools        map[string]Tool
 	messages     []openai.Message
 	chunkCh      chan Chunk
 }
 
-func New(openAIClient ChatCompletionStreamer, systemPrompt string, tools map[string]Tool) *Loop {
+func New(openAIClient ChatCompletionStreamer, tools map[string]Tool) *Loop {
 	return &Loop{
 		openAIClient: openAIClient,
-		systemPrompt: systemPrompt,
 		tools:        tools,
 		messages:     []openai.Message{},
 		chunkCh:      make(chan Chunk),
@@ -31,11 +29,6 @@ func New(openAIClient ChatCompletionStreamer, systemPrompt string, tools map[str
 }
 
 func (a *Loop) RunLoop(ctx context.Context, messages []openai.Message, model string) {
-	// Creating messages with system propt as first messages
-	messages = append([]openai.Message{
-		openai.SystemMessage(a.systemPrompt),
-	}, messages...)
-
 	// Composing tools for agent
 	tools := []openai.Tool{}
 	for name, tool := range a.tools {
