@@ -10,7 +10,7 @@ The TUI is the fastest way to poke at the loop without writing extra code. It is
 - trying prompts
 - watching streamed output
 - seeing when tool calls happen
-- checking that your provider configuration works
+- checking that your saved provider configuration works
 
 It is not a general CLI framework. Today it is a small interactive shell around `loop.RunLoop`.
 
@@ -22,7 +22,7 @@ Run:
 go run .
 ```
 
-The app prints the active model and waits for input.
+On first run, the app launches onboarding and writes `~/.config/hrns/config.json`. After that, it prints the active provider and model and waits for input.
 
 ## Built-in commands
 
@@ -32,7 +32,7 @@ The app prints the active model and waits for input.
 /model <model>
 ```
 
-This only changes the in-memory model for the current TUI session.
+This updates the current provider's saved default model in the config file.
 
 ### Reset conversation
 
@@ -50,6 +50,22 @@ This clears the accumulated conversation history.
 
 This prints the available commands.
 
+### List saved providers
+
+```text
+/providers
+```
+
+This prints the names of providers stored in the config file.
+
+### Add a provider
+
+```text
+/connect
+```
+
+This runs the same prompt sequence as first-run onboarding and saves another provider entry.
+
 ## What gets streamed back
 
 The loop emits chunk types and the TUI renders them differently:
@@ -64,6 +80,12 @@ Tool-call results are used to continue the conversation, but the current TUI doe
 ## Session behavior
 
 The TUI keeps a `messages` slice in memory and appends your prompts plus assistant/tool messages after each turn. That means later prompts in the same session include earlier context unless you run `/new`.
+
+Provider state is slightly different:
+
+- the provider client is built once when the TUI starts
+- `/model` persists a new model value for the current provider
+- `/connect` saves another provider, but the active session keeps using the client that was already created
 
 ## Good prompts for exploration
 
@@ -83,9 +105,8 @@ Fetch https://example.com and tell me what came back.
 
 ## Known limits
 
-- The default model is hardcoded.
 - The system prompt is hardcoded.
-- There is no persistent config file.
+- Provider switching is not live; restart after `/connect`.
 - There is no non-interactive `exec` mode.
 - `/model` expects an argument.
 

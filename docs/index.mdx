@@ -17,13 +17,11 @@ If you want to play with agents, inspect the moving parts, and then reuse the sa
 The current repo behavior is intentionally narrow:
 
 - The binary starts an interactive TUI.
-- The TUI defaults to the hardcoded model `kimi-k2.6`.
-- The app builds an OpenAI-compatible client from environment variables.
+- The TUI creates a persisted provider config on first run.
+- The TUI builds an OpenAI-compatible client from the saved current provider.
 - The default system prompt is hardcoded in `main.go`.
 - Built-in tools cover file reads, basic file edits, directory globbing, shell commands, HTTP fetches, and skill loading.
 - Skills are discovered from `~/.agents/skills` and `./.agents/skills`.
-
-This documentation describes current behavior only. It does not document items from `TODO.md` as if they already exist.
 
 ## Start here
 
@@ -32,7 +30,7 @@ This documentation describes current behavior only. It does not document items f
     Run the bundled TUI, configure a provider, and send your first prompt.
   </Card>
   <Card title="Provider setup" icon="plug" href="/guides/provider-setup">
-    Point hrns at any OpenAI-compatible endpoint with the supported environment variables.
+    Configure saved providers for any OpenAI-compatible endpoint.
   </Card>
   <Card title="Embed in Go" icon="code" href="/guides/embed-in-go">
     Build your own agent wrapper by composing `openai.Client`, `loop.Loop`, and your own tools.
@@ -46,8 +44,8 @@ This documentation describes current behavior only. It does not document items f
 
 The runtime flow is small enough to keep in your head:
 
-1. `main.go` builds a client, loads skills, assembles the tool map, and starts the TUI.
-2. The TUI collects user input and sends the conversation to `loop.RunLoop`.
+1. `main.go` loads skills, assembles the prompt and tool map, and starts the TUI.
+2. The TUI loads provider config, builds the client and loop, then collects user input and sends the conversation to `loop.RunLoop`.
 3. `loop.RunLoop` streams assistant output, accumulates tool calls, executes tools, appends tool results, and re-prompts the model until no more tools are called.
 4. Streamed chunks are printed back to the terminal as assistant text, reasoning text, or tool-call notices.
 

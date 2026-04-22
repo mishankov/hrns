@@ -26,14 +26,7 @@ go install github.com/mishankov/hrns@latest
 
 ## Run
 
-Set provider configuration:
-
-```bash
-export HRNS_KEY="your-api-key"
-export HRNS_BASE_URL="https://your-provider.example/v1"
-```
-
-Then start the app:
+Start the app:
 
 ```bash
 hrns
@@ -45,24 +38,38 @@ Or, from a checkout:
 go run .
 ```
 
-The bundled TUI starts with the hardcoded model `kimi-k2.6`. If your provider does not support that model, switch immediately:
+On first launch, the bundled TUI creates `~/.config/hrns/config.json` through an interactive onboarding flow. It asks for:
 
-```text
-/model <your-model>
-```
+- provider name
+- provider API URL
+- provider API key
+- default model
+- whether to skip TLS verification
 
-Other built-in commands:
+After onboarding, later runs reuse the saved config and print the active provider and model at startup.
 
-- `/new`
-- `/help`
+Built-in commands:
+
+- `/model <model>` updates the current provider's saved default model
+- `/new` starts a fresh conversation
+- `/help` shows the command list
+- `/providers` lists saved providers
+- `/connect` adds another provider to the saved config
+
+Note: `/connect` persists a new provider configuration, but the current session keeps using the client that was created at startup. Restart the app to begin using the newly connected provider.
 
 ## Configuration
 
-The current binary reads these environment variables:
+The bundled binary stores provider settings in:
 
-- `HRNS_KEY`: API key sent as `Authorization: Bearer ...`
-- `HRNS_BASE_URL`: OpenAI-compatible base URL. Defaults to `https://api.openai.com/v1`
-- `HRNS_SKIP_VERIFY`: set to `true` to disable TLS certificate verification
+```text
+~/.config/hrns/config.json
+```
+
+The config file contains:
+
+- named providers with `url`, `key`, `model`, and `skipVerify`
+- `currentProvider` to choose the default provider on startup
 
 The bundled app also loads skills from:
 

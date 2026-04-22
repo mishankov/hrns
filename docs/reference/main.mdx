@@ -9,19 +9,9 @@ The `main` package is not a reusable library surface. Its job is to assemble the
 
 ## Current startup behavior
 
-`main.go` performs four concrete tasks:
+`main.go` performs three concrete tasks:
 
-### 1. Build the OpenAI-compatible client
-
-It reads:
-
-- `HRNS_KEY`
-- `HRNS_BASE_URL`
-- `HRNS_SKIP_VERIFY`
-
-and passes them into `openai.NewClient(...)`.
-
-### 2. Load skills
+### 1. Load skills
 
 It calls:
 
@@ -34,7 +24,7 @@ skills.LoadAllSkills([]string{
 
 Then it creates `load_skill` with `skills.NewLoadSkillTool(...)`.
 
-### 3. Build the default prompt and tool map
+### 2. Build the default prompt and tool map
 
 The system prompt starts as:
 
@@ -53,9 +43,20 @@ The default tool map includes:
 - `web_fetch`
 - `load_skill`
 
-### 4. Start the TUI
+### 3. Start the TUI
 
-The package creates `tui.New()` and runs it with the configured `loop.Loop`.
+The package creates:
+
+```go
+tui.New(
+    systemPrompt,
+    tui.WithTools(...),
+)
+```
+
+and then calls `Run(ctx)`.
+
+Provider loading, onboarding, client creation, and loop creation now happen inside `tui.Run(...)`.
 
 ## When to reuse it
 

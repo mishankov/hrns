@@ -19,13 +19,19 @@ description: "Understand how the current hrns runtime is assembled and where eac
 At startup, `main.go` does the following:
 
 1. creates a background context
-2. reads `HRNS_KEY`, `HRNS_BASE_URL`, and `HRNS_SKIP_VERIFY`
-3. builds `openai.Client`
-4. loads skills from the default global and local roots
-5. creates the `load_skill` tool from the discovered skills
-6. builds a hardcoded system prompt, optionally listing discovered skills
-7. creates `loop.Loop` with the built-in tools
-8. starts the TUI
+2. loads skills from the default global and local roots
+3. creates the `load_skill` tool from the discovered skills
+4. builds a hardcoded system prompt, optionally listing discovered skills
+5. creates `tui.TUIApp` with the built-in tools
+6. starts the TUI
+
+Inside `tui.Run`, startup continues like this:
+
+1. load `~/.config/hrns/config.json`
+2. if the file is missing or has no providers, run onboarding
+3. pick `currentProvider`
+4. build `openai.Client` from that provider's `url`, `key`, and `skipVerify`
+5. create `loop.Loop` with the stored system prompt and tools
 
 ## Request lifecycle
 
@@ -83,19 +89,22 @@ Two kinds of state matter:
 
 The TUI stores:
 
+- the system prompt
+- the tool map
 - the current conversation history
+- the loaded config
 - the active model string for the session
 
-The TUI is where model switching and conversation reset happen today.
+The TUI is where onboarding, model persistence, and conversation reset happen today.
 
 ## Current design limits
 
 The architecture is small on purpose, but that comes with hard edges:
 
 - system prompt is hardcoded in `main.go`
-- default model is hardcoded in `tui/tui.go`
 - tool schemas are flat and fully required
 - tool results are plain strings
+- provider connections are not switched live after `/connect`
 - the bundled entrypoint is interactive only
 
 Those limits are acceptable for experiments and for library-style embedding, where you own the outer application.

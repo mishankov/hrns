@@ -1,8 +1,10 @@
 package tui
 
 import (
-	"bufio"
 	"context"
+	"crypto/tls"
+	"errors"
+	"net/http"
 	"os"
 	"slices"
 	"strings"
@@ -12,41 +14,125 @@ import (
 )
 
 type TUIApp struct {
+	systemPrompt string
+	tools        map[string]loop.Tool
 }
 
-func New() *TUIApp {
-	return &TUIApp{}
+type Option func(*TUIApp)
+
+func WithTool(name string, tool loop.Tool) Option {
+	return func(app *TUIApp) {
+		app.tools[name] = tool
+	}
 }
 
-func (app *TUIApp) Run(ctx context.Context, agnt loop.Loop) {
+func WithTools(tools map[string]loop.Tool) Option {
+	return func(app *TUIApp) {
+		for name, tool := range tools {
+			app.tools[name] = tool
+		}
+	}
+}
+
+func New(systemPrompt string, opts ...Option) *TUIApp {
+	app := &TUIApp{
+		systemPrompt: systemPrompt,
+		tools:        map[string]loop.Tool{},
+	}
+
+	for _, opt := range opts {
+		opt(app)
+	}
+
+	return app
+}
+
+func (app *TUIApp) Run(ctx context.Context) {
+	config, err := LoadConfig()
+	if errors.Is(err, os.ErrNotExist) || len(config.Providers) == 0 {
+		PrintHarnessMessage("config file not found, running onboarding now")
+		var onboardingErr error
+		config, onboardingErr = Onboarding()
+		if onboardingErr != nil {
+			PrintError("failed to run onboarding: " + onboardingErr.Error())
+			return
+		}
+	} else if err != nil {
+		PrintError("failed to load config: " + err.Error())
+		return
+	}
+
+	currentProvider := config.Providers[config.CurrentProvider]
+	model := config.Providers[config.CurrentProvider].Model
+
+	client := openai.NewClient(
+		openai.WithBaseURL(currentProvider.Url),
+		openai.WithAPIKey(currentProvider.Key),
+		openai.WithHTTPClient(
+			&http.Client{Transport: &http.Transport{
+				TLSClientConfig: &tls.Config{
+					InsecureSkipVerify: currentProvider.SkipVerify,
+				},
+			}}),
+	)
+
+	agnt := loop.New(
+		client,
+		app.systemPrompt,
+		app.tools,
+	)
+
 	messages := []openai.Message{}
 
-	model := "kimi-k2.6"
-
 	PrintHarnessMessage("HRNS loop. dev")
+	PrintHarnessMessage("Provider: " + config.CurrentProvider)
 	PrintHarnessMessage("Model: " + model)
 
 	for {
-		reader := bufio.NewReader(os.Stdin)
-		PrintUserInputPrompt()
-		messageText, _ := reader.ReadString('\n')
-		messageText = strings.TrimSpace(messageText)
+		messageText := GetUserInput()
 
 		if strings.HasPrefix(messageText, "/") {
 			commandSplited := strings.Split(messageText, " ")
 
 			switch commandSplited[0] {
 			case "/model":
+				previousModel := model
 				model = strings.TrimSpace(commandSplited[1])
+
+				provider := config.Providers[config.CurrentProvider]
+				provider.Model = model
+				config.Providers[config.CurrentProvider] = provider
+
+				err := config.Save()
+				if err != nil {
+					PrintError("failed to save config: " + err.Error())
+					model = previousModel
+					break
+				}
+
 				PrintHarnessMessage("Model changed to " + model)
 			case "/new":
 				messages = []openai.Message{}
 				PrintHarnessMessage("New session started")
+			case "/providers":
+				PrintHarnessMessage("Providers:")
+				for name := range config.Providers {
+					PrintHarnessMessage(name)
+				}
+			case "/connect":
+				err := ConnectProvider(config)
+				if err != nil {
+					PrintError("failed to connect provider: " + err.Error())
+					break
+				}
 			case "/help":
 				PrintHarnessMessage("Available commands:")
 				PrintHarnessMessage("/model <model> - change model")
-				PrintHarnessMessage("/new - start new session")
-				PrintHarnessMessage("/help - show this help")
+				PrintHarnessMessage("/new           - start new session")
+				PrintHarnessMessage("/help          - show this help")
+				PrintHarnessMessage("/providers     - list connected providers")
+				PrintHarnessMessage("/connect       - connect a new provider")
+
 			default:
 				PrintError("unknown command: " + commandSplited[0])
 			}

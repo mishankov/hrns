@@ -1,6 +1,12 @@
 package tui
 
-import "github.com/fatih/color"
+import (
+	"bufio"
+	"os"
+	"strings"
+
+	"github.com/fatih/color"
+)
 
 var reasoningColor = color.RGB(150, 150, 150)
 var responseColor = color.New()
@@ -41,4 +47,11 @@ func PrintHarnessMessage(message string) {
 
 func PrintNewLine() {
 	print("\n")
+}
+
+func GetUserInput() string {
+	reader := bufio.NewReader(os.Stdin)
+	PrintUserInputPrompt()
+	messageText, _ := reader.ReadString('\n')
+	return strings.TrimSpace(messageText)
 }

@@ -5,85 +5,96 @@ description: "Configure hrns to talk to an OpenAI-compatible chat completion end
 
 ## Supported configuration
 
-The bundled app reads these environment variables at startup:
-
-- `HRNS_KEY`
-- `HRNS_BASE_URL`
-- `HRNS_SKIP_VERIFY`
-
-That configuration is passed into `openai.NewClient(...)` in `main.go`.
-
-## How hrns uses them
-
-### `HRNS_KEY`
-
-If set, the client sends:
-
-```http
-Authorization: Bearer <HRNS_KEY>
-```
-
-If unset, the client does not attach an `Authorization` header.
-
-### `HRNS_BASE_URL`
-
-If set, the client trims any trailing slash and posts to:
+The bundled TUI stores provider settings in:
 
 ```text
-<HRNS_BASE_URL>/chat/completions
+~/.config/hrns/config.json
 ```
 
-If unset, the default base URL is:
+If the file does not exist, startup falls back to an interactive onboarding flow.
 
-```text
-https://api.openai.com/v1
+## First-run onboarding
+
+On the first launch, `hrns` prompts for:
+
+- provider name
+- provider API URL
+- provider API key
+- default model
+- whether to skip TLS verification
+
+The entered provider is saved and becomes `currentProvider`.
+
+## Config shape
+
+The current file format looks like this:
+
+```json
+{
+  "providers": {
+    "openai": {
+      "url": "https://api.openai.com/v1",
+      "key": "your-api-key",
+      "model": "your-model",
+      "skipVerify": false
+    }
+  },
+  "currentProvider": "openai"
+}
 ```
 
-### `HRNS_SKIP_VERIFY`
+For the active provider, `tui.Run` builds `openai.NewClient(...)` with:
 
-If set to `true`, the bundled `http.Client` disables TLS certificate verification.
-
-That is useful for local experiments against development endpoints with self-signed certs. It is not a production-safe default.
+- `url` as the OpenAI-compatible base URL
+- `key` as the bearer token
+- `skipVerify` to control TLS verification
+- `model` as the startup model shown in the TUI
 
 ## Typical setups
 
 ### Default OpenAI-style base URL
 
-```bash
-export HRNS_KEY="your-api-key"
-go run .
-```
+Use onboarding and enter:
+
+- provider name: `openai`
+- provider API URL: `https://api.openai.com/v1`
+- provider API key: your API key
+- default model: a model your provider supports
+- skip TLS verify: `n`
 
 ### Custom endpoint
 
-```bash
-export HRNS_BASE_URL="https://your-provider.example/v1"
-export HRNS_KEY="your-api-key"
-go run .
-```
+Use onboarding and enter your endpoint URL and model.
 
 ### Local endpoint with self-signed TLS
 
-```bash
-export HRNS_BASE_URL="https://localhost:8443/v1"
-export HRNS_KEY="dev-key"
-export HRNS_SKIP_VERIFY="true"
-go run .
-```
+Set:
+
+- provider API URL: `https://localhost:8443/v1`
+- provider API key: your development key
+- skip TLS verify: `y`
 
 ## Important runtime detail
 
 Provider configuration and model selection are separate concerns.
 
-Even after you point `hrns` at a working provider, the TUI still starts with the hardcoded model `kimi-k2.6`. If your endpoint does not support that model, switch immediately after launch:
+You can change the saved model for the current provider at runtime:
 
 ```text
 /model <your-model>
 ```
 
+You can also add more providers with:
+
+```text
+/connect
+```
+
+The current implementation saves the new provider and marks it as current in the config file, but it does not rebuild the in-memory client for the existing session. Restart the TUI to actually talk to that provider.
+
 ## When embedding instead of using the TUI
 
-If you use the packages directly, you do not need these environment variables at all. You can build the client explicitly:
+If you use the packages directly, you do not need the TUI config file at all. You can build the client explicitly:
 
 ```go
 client := openai.NewClient(

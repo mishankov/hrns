@@ -5,20 +5,29 @@ description: "The interactive terminal UI used by the bundled hrns binary."
 
 ## Purpose
 
-The `tui` package is a thin interactive shell around `loop.Loop`.
+The `tui` package is a thin interactive shell around `loop.Loop` with a small persisted provider config.
 
 ## Main entrypoints
 
-### `tui.New()`
+### `tui.New(systemPrompt string, opts ...Option)`
 
-Constructs a `TUIApp`.
+Constructs a `TUIApp` with a system prompt and registered tools.
 
-### `(*TUIApp).Run(ctx, agnt)`
+Useful option helpers:
+
+- `tui.WithTool(name, tool)`
+- `tui.WithTools(map[string]loop.Tool)`
+
+### `(*TUIApp).Run(ctx)`
 
 Starts the read-eval-print loop:
 
+- loads `~/.config/hrns/config.json`
+- runs onboarding if the config file is missing or empty
+- builds `openai.Client` for the current provider
+- constructs `loop.Loop` from the stored system prompt and tools
 - prints the banner
-- initializes the model to `kimi-k2.6`
+- prints the active provider and model
 - reads a line from stdin
 - handles slash commands
 - appends user messages
@@ -32,9 +41,11 @@ The package currently handles:
 
 - `/model <model>`
 - `/new`
+- `/providers`
+- `/connect`
 - `/help`
 
-There is no built-in command persistence or command parser beyond basic string splitting.
+Command parsing is still basic string splitting. Model changes are persisted to the config file. Provider additions are also persisted, but the active session client is not rebuilt after `/connect`.
 
 ## Rendering behavior
 
