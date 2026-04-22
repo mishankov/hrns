@@ -7,8 +7,12 @@ import (
 	"github.com/mishankov/hrns/openai"
 )
 
+type ChatCompletionStreamer interface {
+	StreamChatCompletion(context.Context, openai.ChatCompletionRequest) (<-chan openai.StreamEvent, error)
+}
+
 type Loop struct {
-	openAIClient *openai.Client
+	openAIClient ChatCompletionStreamer
 	systemPrompt string
 	model        string
 	tools        map[string]Tool
@@ -16,7 +20,7 @@ type Loop struct {
 	chunkCh      chan Chunk
 }
 
-func New(openAIClient *openai.Client, systemPrompt string, tools map[string]Tool) *Loop {
+func New(openAIClient ChatCompletionStreamer, systemPrompt string, tools map[string]Tool) *Loop {
 	return &Loop{
 		openAIClient: openAIClient,
 		systemPrompt: systemPrompt,
