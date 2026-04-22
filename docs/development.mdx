@@ -1,0 +1,61 @@
+---
+title: "Development"
+description: "Contribute to hrns itself and keep the docs aligned with the current code."
+---
+
+## Working on the Go code
+
+Run the test suite with:
+
+```bash
+go test ./...
+```
+
+Project testing conventions are documented in the repo-level `TESTING.md`. The important rules are:
+
+- use external test packages
+- use only the Go standard library `testing` package
+- test exported behavior rather than internals
+- keep test files aligned with source files
+
+## Working on the docs
+
+This site is a Mintlify project rooted in `docs/`.
+
+To preview it locally:
+
+```bash
+npm i -g mint
+cd docs
+mint dev
+```
+
+The preview server usually runs on `http://localhost:3000`.
+
+## Documentation rules for this repo
+
+- Document current behavior only.
+- Do not present items from `TODO.md` as shipped features.
+- Prefer tutorial-style guides over abstract reference prose.
+- When behavior is hardcoded, say so explicitly.
+- Keep package reference pages close to the exported API and tested behavior.
+
+## What to update when code changes
+
+If you change any of the following, the docs should usually change too:
+
+- environment variables in `main.go`
+- built-in tools in `tools/`
+- skill discovery or loading behavior in `skills/`
+- loop semantics or chunk types in `loop/`
+- TUI commands or defaults in `tui/`
+- OpenAI client request or stream behavior in `openai/`
+
+## Suggested docs validation
+
+If you have Mintlify installed, run:
+
+```bash
+cd docs
+mint broken-links
+```

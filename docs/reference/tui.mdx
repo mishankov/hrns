@@ -1,0 +1,54 @@
+---
+title: "Package reference: tui"
+description: "The interactive terminal UI used by the bundled hrns binary."
+---
+
+## Purpose
+
+The `tui` package is a thin interactive shell around `loop.Loop`.
+
+## Main entrypoints
+
+### `tui.New()`
+
+Constructs a `TUIApp`.
+
+### `(*TUIApp).Run(ctx, agnt)`
+
+Starts the read-eval-print loop:
+
+- prints the banner
+- initializes the model to `kimi-k2.6`
+- reads a line from stdin
+- handles slash commands
+- appends user messages
+- runs the agent loop
+- prints streamed chunks
+- stores the final message history for the next turn
+
+## Slash commands
+
+The package currently handles:
+
+- `/model <model>`
+- `/new`
+- `/help`
+
+There is no built-in command persistence or command parser beyond basic string splitting.
+
+## Rendering behavior
+
+The package uses `github.com/fatih/color` for simple terminal coloring.
+
+It renders:
+
+- harness messages in blue
+- errors in red
+- tool names in red with yellow arguments
+- reasoning text in gray
+
+Assistant response text is printed with the default color settings.
+
+## Relationship to the rest of hrns
+
+The TUI is the easiest way to try the loop, but it is not the core abstraction. If you want a web UI, service, editor integration, or batch runner, you usually replace `tui` rather than extend it.

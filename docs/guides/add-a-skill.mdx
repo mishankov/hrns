@@ -1,0 +1,75 @@
+---
+title: "Add a skill"
+description: "Create SKILL.md files that hrns can discover and expose through the load_skill tool."
+---
+
+## What a skill is here
+
+In `hrns`, a skill is just a Markdown file named `SKILL.md` with YAML frontmatter. The `skills` package reads metadata from the frontmatter and the `load_skill` tool returns the full file body when the model asks for it by name.
+
+Skills are not executable plugins. They are prompt assets.
+
+## Discovery roots
+
+The bundled app loads skills from:
+
+- `~/.agents/skills`
+- `./.agents/skills`
+
+Those defaults come from:
+
+- `skills.DefaultGlobalRootPath`
+- `skills.DefaultLocalRootPath`
+
+## Directory shape
+
+Discovery is shallow and opinionated. The package looks one directory below each root and picks up `SKILL.md` files there.
+
+Example:
+
+```text
+.agents/skills/
+  code-review/
+    SKILL.md
+  release/
+    SKILL.md
+```
+
+Nested skill files deeper than that are ignored by discovery.
+
+## Example skill
+
+```md
+---
+name: repo-map
+description: Summarize the repository structure before making changes
+---
+
+# Repo map
+
+When asked to make changes, first inspect the repository structure and identify the main entrypoints.
+```
+
+The `name` and `description` fields are what `LoadAllSkills` keeps in memory and what the default system prompt advertises.
+
+## How the bundled app uses skills
+
+At startup:
+
+1. `main.go` loads all discovered skills.
+2. It appends their names and descriptions to the hardcoded system prompt.
+3. It registers the `load_skill` tool.
+4. If the model asks to load one by name, the tool returns the entire `SKILL.md` file contents.
+
+## Important behavior details
+
+- Skill names are matched exactly.
+- The `load_skill` tool returns the full file body, not just the body after frontmatter.
+- Missing roots are ignored.
+- Missing or unreadable skill files return an error string.
+
+## When to use skills versus tools
+
+Use a skill when you want to give the model reusable instructions or workflow guidance.
+
+Use a tool when you want the model to do something at runtime, such as read a file or call a service.

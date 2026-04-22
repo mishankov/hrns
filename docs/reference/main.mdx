@@ -1,0 +1,62 @@
+---
+title: "Package reference: main"
+description: "What the bundled hrns binary wires together at startup."
+---
+
+## Purpose
+
+The `main` package is not a reusable library surface. Its job is to assemble the default `hrns` application from the reusable packages.
+
+## Current startup behavior
+
+`main.go` performs four concrete tasks:
+
+### 1. Build the OpenAI-compatible client
+
+It reads:
+
+- `HRNS_KEY`
+- `HRNS_BASE_URL`
+- `HRNS_SKIP_VERIFY`
+
+and passes them into `openai.NewClient(...)`.
+
+### 2. Load skills
+
+It calls:
+
+```go
+skills.LoadAllSkills([]string{
+    skills.DefaultGlobalRootPath,
+    skills.DefaultLocalRootPath,
+})
+```
+
+Then it creates `load_skill` with `skills.NewLoadSkillTool(...)`.
+
+### 3. Build the default prompt and tool map
+
+The system prompt starts as:
+
+```text
+You are a coding assistant that talks like a pirate.
+```
+
+If skills were found, the prompt is extended with their names, descriptions, and a note that they can be loaded with `load_skill`.
+
+The default tool map includes:
+
+- `read_file`
+- `list_files`
+- `write_file`
+- `run_command`
+- `web_fetch`
+- `load_skill`
+
+### 4. Start the TUI
+
+The package creates `tui.New()` and runs it with the configured `loop.Loop`.
+
+## When to reuse it
+
+In most cases, you should not reuse `main` directly. If you want a custom prompt, custom tools, or a different UI, copy the wiring pattern into your own program and compose the packages yourself.

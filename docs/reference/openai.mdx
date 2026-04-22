@@ -1,0 +1,90 @@
+---
+title: "Package reference: openai"
+description: "OpenAI-compatible request, response, and streaming primitives used by hrns."
+---
+
+## Purpose
+
+The `openai` package is a small client plus a few data structures for chat completions and streamed deltas.
+
+## Client construction
+
+Create a client with:
+
+```go
+client := openai.NewClient(
+    openai.WithBaseURL("https://your-provider.example/v1"),
+    openai.WithAPIKey("your-api-key"),
+    openai.WithHTTPClient(customHTTPClient),
+)
+```
+
+Defaults:
+
+- base URL: `https://api.openai.com/v1`
+- request timeout on the default client: 5 minutes
+
+## Request methods
+
+### `CreateChatCompletion`
+
+Sends a non-streaming `POST` request to:
+
+```text
+/chat/completions
+```
+
+It returns validation errors if `model` or `messages` are missing.
+
+### `StreamChatCompletion`
+
+Also posts to `/chat/completions`, but forces `stream=true`, requests `text/event-stream`, and returns a channel of `StreamEvent`.
+
+Each `StreamEvent` can contain:
+
+- `Data`: a parsed response chunk
+- `Done`: true when `[DONE]` is received
+- `Raw`: the raw payload bytes
+- `Error`: a parse or scan error
+
+## Extra-field preservation
+
+The package is intentionally tolerant of provider-specific fields.
+
+- `ChatCompletionRequest.Extra` is merged into outbound JSON.
+- `Message.Extra`, `ToolCall.Extra`, and `ChatCompletionChoice.Extra` preserve unknown inbound fields.
+- `ChatCompletionResponse.Raw` stores raw JSON fragments by top-level key.
+
+That makes the package useful against OpenAI-compatible providers that add extra fields.
+
+## Stream accumulation
+
+`ChatCompletionAccumulator` merges partial deltas into full choices. In particular, it:
+
+- concatenates text content
+- merges partial tool calls by index
+- stitches fragmented tool-call argument strings together
+- preserves extra fields and logprobs
+- preserves structured content when no text concatenation is possible
+
+This is what `loop.RunLoop` relies on before executing tools.
+
+## Helper constructors
+
+Use:
+
+- `openai.SystemMessage(...)`
+- `openai.UserMessage(...)`
+- `openai.ToolMessage(...)`
+
+Use `openai.MessageText(...)` when you expect plain string content and want the helper's type assertion behavior.
+
+## Error model
+
+Non-2xx API responses return `*openai.APIError`, which includes:
+
+- `StatusCode`
+- `Message`
+- `Body`
+
+That gives callers access to both a concise error string and the raw response body.

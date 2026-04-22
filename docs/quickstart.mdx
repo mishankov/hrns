@@ -1,0 +1,111 @@
+---
+title: "Quickstart"
+description: "Run the bundled hrns TUI, connect it to a model provider, and send your first tool-using prompt."
+---
+
+## What you need
+
+- Go installed locally
+- an OpenAI-compatible chat completion endpoint
+- a model name that your provider accepts
+
+The TUI starts with the hardcoded model `kimi-k2.6`. In practice, you will often want to switch models immediately with `/model <your-model>`.
+
+## 1. Install `hrns`
+
+You can install the binary from a local checkout or directly from GitHub.
+
+### Install from source
+
+From the repository root:
+
+```bash
+go install .
+```
+
+### Install from GitHub
+
+```bash
+go install github.com/mishankov/hrns@latest
+```
+
+This puts the `hrns` binary in your Go bin directory.
+
+## 2. Set provider environment variables
+
+At startup, `main.go` reads three environment variables:
+
+- `HRNS_KEY`: optional API key sent as `Authorization: Bearer ...`
+- `HRNS_BASE_URL`: optional base URL for the OpenAI-compatible API. Defaults to `https://api.openai.com/v1`
+- `HRNS_SKIP_VERIFY`: set to `true` to skip TLS certificate verification
+
+Example with the default OpenAI base URL:
+
+```bash
+export HRNS_KEY="your-api-key"
+```
+
+Example with a self-hosted or proxy endpoint:
+
+```bash
+export HRNS_BASE_URL="https://your-provider.example/v1"
+export HRNS_KEY="your-api-key"
+```
+
+Use `HRNS_SKIP_VERIFY=true` only when you knowingly need to ignore certificate validation, such as in local development against a test endpoint.
+
+## 3. Start the TUI
+
+If you installed the binary:
+
+```bash
+hrns
+```
+
+If you are running from a checkout instead:
+
+```bash
+go run .
+```
+
+You should see a prompt similar to this:
+
+```text
+HRNS loop. dev
+Model: kimi-k2.6
+> 
+```
+
+## 4. Switch to a model your provider supports
+
+The built-in default model is not configurable via environment variables today. Use the TUI command:
+
+```text
+/model <your-model>
+```
+
+Other built-in commands:
+
+- `/new` resets the conversation history
+- `/help` prints the command list
+
+## 5. Send a prompt that can use tools
+
+Try something that encourages tool use:
+
+```text
+List the Go files in this repository, then read main.go and summarize how the app boots.
+```
+
+When the model decides to call tools, the TUI prints tool-call notices inline. Assistant text and reasoning text stream as chunks.
+
+## 6. Know the current defaults
+
+The bundled app is intentionally opinionated and minimal:
+
+- The system prompt is hardcoded in `main.go`.
+- The default model is hardcoded in `tui/tui.go`.
+- Skills are loaded automatically from the default roots if present.
+- There is no non-interactive CLI mode yet.
+
+If you want control over those pieces, the usual path is to embed the packages in your own Go program. See [Embed hrns in your Go code](/guides/embed-in-go).

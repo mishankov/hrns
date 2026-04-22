@@ -1,0 +1,86 @@
+---
+title: "Package reference: loop"
+description: "The agent loop, chunk model, and tool interface that drive hrns."
+---
+
+## Purpose
+
+The `loop` package owns the conversation cycle between the model and your tools.
+
+## Main types
+
+### `ToolArgument`
+
+```go
+type ToolArgument struct {
+    Name, Type string
+}
+```
+
+This is the package's minimal schema language for tool arguments.
+
+### `Tool`
+
+```go
+type Tool interface {
+    Description() string
+    Arguments() []ToolArgument
+    Call(args map[string]any) string
+}
+```
+
+If you want the model to call into application code, this is the interface you implement.
+
+### `SimpleTool`
+
+Use `NewSimpleTool(...)` when a closure is enough and you do not need a custom type.
+
+### `Loop`
+
+Created with:
+
+```go
+loop.New(openAIClient, systemPrompt, tools)
+```
+
+It stores the client, the system prompt, the tool map, the last completed message history, and a chunk channel.
+
+## `RunLoop`
+
+`RunLoop(ctx, messages, model)` does the core work:
+
+1. prepends the system message
+2. translates tools into function schemas
+3. starts a streamed chat completion
+4. emits output chunks while streaming
+5. accumulates the final assistant message and any tool calls
+6. executes tool calls and appends tool messages
+7. repeats until the assistant turn finishes without tool calls
+
+When the run completes, it stores the final messages and emits `ChunkTypeEnd`.
+
+## Chunk types
+
+The loop emits these chunk types:
+
+- `message`
+- `reasoning`
+- `error`
+- `tool_call_start`
+- `tool_call_error`
+- `tool_call_result`
+- `end`
+
+These are UI-facing events. The bundled TUI uses them to decide what to print.
+
+## Important behavior details
+
+- Every declared tool argument is marked as required.
+- Tool calls are executed synchronously.
+- Tool results are appended as `tool` role messages.
+- Unknown tools and invalid tool-call JSON become error strings fed back into the conversation.
+- Reasoning chunks are currently read from `delta.Extra["reasoning"]` when present.
+
+## Good fit
+
+This package is a good fit when you want a tiny, inspectable agent loop rather than a framework with lots of policy baked in.

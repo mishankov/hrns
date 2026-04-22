@@ -1,0 +1,119 @@
+---
+title: "Add a tool"
+description: "Extend hrns with custom tools that the model can call during the loop."
+---
+
+## Tool contract
+
+The loop works against this interface:
+
+```go
+type Tool interface {
+    Description() string
+    Arguments() []ToolArgument
+    Call(args map[string]any) string
+}
+```
+
+Each tool is exposed to the model as a function-style schema with:
+
+- a name from the map key
+- a description from `Description()`
+- a flat object schema built from `Arguments()`
+
+All declared arguments are marked as required.
+
+## Fastest path: `loop.NewSimpleTool`
+
+For simple tools, use the helper:
+
+```go
+tool := loop.NewSimpleTool(
+    "Looks up a project name",
+    []loop.ToolArgument{{Name: "id", Type: "string"}},
+    func(args map[string]any) string {
+        id, _ := args["id"].(string)
+        return "project-" + id
+    },
+)
+```
+
+Then register it:
+
+```go
+agent := loop.New(client, prompt, map[string]loop.Tool{
+    "lookup_project": tool,
+})
+```
+
+## Example: custom tool type
+
+Use a concrete type when you need dependencies:
+
+```go
+type ProjectTool struct {
+    store map[string]string
+}
+
+func (t *ProjectTool) Description() string {
+    return "Returns a project title by id"
+}
+
+func (t *ProjectTool) Arguments() []loop.ToolArgument {
+    return []loop.ToolArgument{{Name: "id", Type: "string"}}
+}
+
+func (t *ProjectTool) Call(args map[string]any) string {
+    id, _ := args["id"].(string)
+    if value, ok := t.store[id]; ok {
+        return value
+    }
+    return "not found"
+}
+```
+
+## How argument schemas work
+
+`ToolArgument` only contains `Name` and `Type`. The loop converts that into a flat JSON schema:
+
+```json
+{
+  "type": "object",
+  "properties": {
+    "id": { "type": "string" }
+  },
+  "required": ["id"]
+}
+```
+
+That means the current built-in schema support is deliberately small:
+
+- no per-field descriptions
+- no nested object schemas
+- no optional arguments
+
+If you need richer schemas, you would extend the loop package rather than working around it in prompts.
+
+## How tool results flow back
+
+When the model emits a tool call:
+
+1. `loop.RunLoop` parses the JSON argument string.
+2. It emits a `tool_call_start` chunk.
+3. It executes `tool.Call(args)`.
+4. It appends the returned string as a `tool` message.
+5. It makes another streamed chat completion request.
+
+The tool contract is string-in, string-out at the conversation boundary.
+
+## What the built-in tools show about the design
+
+The bundled tools in `tools/` are intentionally simple:
+
+- `read_file`
+- `list_files`
+- `write_file`
+- `run_command`
+- `web_fetch`
+
+They are good examples of the intended size of a tool in this repo: thin wrappers around one capability, with minimal marshaling.

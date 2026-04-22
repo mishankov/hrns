@@ -1,0 +1,95 @@
+---
+title: "Provider setup"
+description: "Configure hrns to talk to an OpenAI-compatible chat completion endpoint."
+---
+
+## Supported configuration
+
+The bundled app reads these environment variables at startup:
+
+- `HRNS_KEY`
+- `HRNS_BASE_URL`
+- `HRNS_SKIP_VERIFY`
+
+That configuration is passed into `openai.NewClient(...)` in `main.go`.
+
+## How hrns uses them
+
+### `HRNS_KEY`
+
+If set, the client sends:
+
+```http
+Authorization: Bearer <HRNS_KEY>
+```
+
+If unset, the client does not attach an `Authorization` header.
+
+### `HRNS_BASE_URL`
+
+If set, the client trims any trailing slash and posts to:
+
+```text
+<HRNS_BASE_URL>/chat/completions
+```
+
+If unset, the default base URL is:
+
+```text
+https://api.openai.com/v1
+```
+
+### `HRNS_SKIP_VERIFY`
+
+If set to `true`, the bundled `http.Client` disables TLS certificate verification.
+
+That is useful for local experiments against development endpoints with self-signed certs. It is not a production-safe default.
+
+## Typical setups
+
+### Default OpenAI-style base URL
+
+```bash
+export HRNS_KEY="your-api-key"
+go run .
+```
+
+### Custom endpoint
+
+```bash
+export HRNS_BASE_URL="https://your-provider.example/v1"
+export HRNS_KEY="your-api-key"
+go run .
+```
+
+### Local endpoint with self-signed TLS
+
+```bash
+export HRNS_BASE_URL="https://localhost:8443/v1"
+export HRNS_KEY="dev-key"
+export HRNS_SKIP_VERIFY="true"
+go run .
+```
+
+## Important runtime detail
+
+Provider configuration and model selection are separate concerns.
+
+Even after you point `hrns` at a working provider, the TUI still starts with the hardcoded model `kimi-k2.6`. If your endpoint does not support that model, switch immediately after launch:
+
+```text
+/model <your-model>
+```
+
+## When embedding instead of using the TUI
+
+If you use the packages directly, you do not need these environment variables at all. You can build the client explicitly:
+
+```go
+client := openai.NewClient(
+    openai.WithBaseURL("https://your-provider.example/v1"),
+    openai.WithAPIKey("your-api-key"),
+)
+```
+
+That is usually the cleaner path for real applications.

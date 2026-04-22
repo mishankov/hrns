@@ -1,0 +1,91 @@
+{
+  "$schema": "https://mintlify.com/docs.json",
+  "theme": "willow",
+  "name": "hrns",
+  "colors": {
+    "primary": "#000000",
+    "light": "#666666",
+    "dark": "#333333"
+  },
+  "favicon": "/favicon.svg",
+  "navigation": {
+    "tabs": [
+      {
+        "tab": "Guides",
+        "groups": [
+          {
+            "group": "Getting started",
+            "pages": [
+              "index",
+              "quickstart",
+              "guides/provider-setup",
+              "guides/tui-workflow"
+            ]
+          },
+          {
+            "group": "Building with hrns",
+            "pages": [
+              "guides/embed-in-go",
+              "guides/add-a-tool",
+              "guides/add-a-skill"
+            ]
+          },
+          {
+            "group": "Project development",
+            "pages": ["development"]
+          }
+        ]
+      },
+      {
+        "tab": "Reference",
+        "groups": [
+          {
+            "group": "Architecture",
+            "pages": ["internals/architecture"]
+          },
+          {
+            "group": "Packages",
+            "pages": [
+              "reference/main",
+              "reference/loop",
+              "reference/openai",
+              "reference/tools",
+              "reference/skills",
+              "reference/tui"
+            ]
+          }
+        ]
+      }
+    ],
+    "global": {
+      "anchors": [
+        {
+          "anchor": "GitHub",
+          "href": "https://github.com/mishankov/hrns",
+          "icon": "github"
+        }
+      ]
+    }
+  },
+  "logo": {
+    "light": "/logo/light.svg",
+    "dark": "/logo/dark.svg"
+  },
+  "contextual": {
+    "options": [
+      "copy",
+      "view",
+      "chatgpt",
+      "claude",
+      "perplexity",
+      "mcp",
+      "cursor",
+      "vscode"
+    ]
+  },
+  "footer": {
+    "socials": {
+      "github": "https://github.com/mishankov/hrns"
+    }
+  }
+}

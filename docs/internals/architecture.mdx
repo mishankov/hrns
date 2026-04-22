@@ -1,0 +1,101 @@
+---
+title: "Architecture"
+description: "Understand how the current hrns runtime is assembled and where each package fits."
+---
+
+## High-level shape
+
+`hrns` is a small composition of six packages:
+
+- `main`: wires everything together
+- `openai`: OpenAI-compatible request and streaming client
+- `loop`: agent loop and tool execution
+- `tools`: bundled tool implementations
+- `skills`: skill discovery and the `load_skill` tool
+- `tui`: interactive terminal UI
+
+## Boot sequence
+
+At startup, `main.go` does the following:
+
+1. creates a background context
+2. reads `HRNS_KEY`, `HRNS_BASE_URL`, and `HRNS_SKIP_VERIFY`
+3. builds `openai.Client`
+4. loads skills from the default global and local roots
+5. creates the `load_skill` tool from the discovered skills
+6. builds a hardcoded system prompt, optionally listing discovered skills
+7. creates `loop.Loop` with the built-in tools
+8. starts the TUI
+
+## Request lifecycle
+
+For each user turn in the TUI:
+
+1. the TUI appends a `user` message to the current session
+2. it starts `RunLoop` with the current message history and chosen model
+3. `RunLoop` prepends the system message
+4. `RunLoop` converts registered tools into OpenAI-style function schemas
+5. `openai.Client.StreamChatCompletion` streams SSE events from `/chat/completions`
+6. `loop` emits chunks for assistant text, reasoning, and tool call events
+7. if the model called tools, `loop` executes them and appends `tool` messages
+8. the loop repeats until a streamed response finishes without tool calls
+9. the TUI updates its in-memory conversation from `agent.Messages()`
+
+## Stream accumulation
+
+The `openai.ChatCompletionAccumulator` is a key part of the runtime.
+
+It merges partial streamed deltas into complete choices by:
+
+- concatenating text content
+- preserving structured content when text concatenation does not apply
+- stitching together fragmented tool-call arguments
+- preserving extra provider-specific fields
+
+That is what lets `RunLoop` wait until the stream ends and then execute fully assembled tool calls.
+
+## Tool execution model
+
+Tool execution is synchronous inside the loop:
+
+- tools are looked up by name in a map
+- arguments are parsed from the tool call's JSON string
+- the tool returns a string result
+- the result is appended as a `tool` message
+
+There is no retry layer, timeout layer, or per-tool sandboxing in the loop package itself.
+
+## State model
+
+Two kinds of state matter:
+
+### Loop state
+
+`loop.Loop` stores:
+
+- the client
+- the system prompt
+- the tool map
+- the last completed message history
+- a chunk channel
+
+### TUI state
+
+The TUI stores:
+
+- the current conversation history
+- the active model string for the session
+
+The TUI is where model switching and conversation reset happen today.
+
+## Current design limits
+
+The architecture is small on purpose, but that comes with hard edges:
+
+- system prompt is hardcoded in `main.go`
+- default model is hardcoded in `tui/tui.go`
+- tool schemas are flat and fully required
+- tool results are plain strings
+- the bundled entrypoint is interactive only
+
+Those limits are acceptable for experiments and for library-style embedding, where you own the outer application.

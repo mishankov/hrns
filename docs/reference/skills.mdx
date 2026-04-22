@@ -1,0 +1,62 @@
+---
+title: "Package reference: skills"
+description: "Skill discovery, metadata loading, and the load_skill tool."
+---
+
+## Purpose
+
+The `skills` package turns `SKILL.md` files into discoverable prompt assets.
+
+## Default roots
+
+The package exports:
+
+- `DefaultGlobalRootPath = "~/.agents/skills"`
+- `DefaultLocalRootPath = "./.agents/skills"`
+
+The bundled app loads both.
+
+## `Skill`
+
+```go
+type Skill struct {
+    Path        string
+    Name        string
+    Description string
+}
+```
+
+`Name` and `Description` come from frontmatter in the skill file.
+
+## Discovery and loading
+
+### `DiscoverSkillFiles`
+
+Scans each configured root and collects `SKILL.md` files one directory level below that root.
+
+Behavior worth knowing:
+
+- `~/...` roots are expanded through `os.UserHomeDir()`
+- missing roots are ignored
+- nested skill files deeper than one level are not discovered
+
+### `GetSkillData`
+
+Reads one `SKILL.md` file, parses its frontmatter, and returns `Skill` metadata.
+
+### `LoadAllSkills`
+
+Combines discovery plus metadata loading across all provided roots.
+
+## `LoadSkillTool`
+
+`NewLoadSkillTool(skills)` creates a tool implementation for the loop package.
+
+Its behavior is simple:
+
+- argument: `name`
+- looks for an exact skill-name match in the loaded slice
+- returns the full file body
+- returns an error string if the name is unknown or the file cannot be read
+
+This tool is what turns discovered skills into something the model can pull in on demand.

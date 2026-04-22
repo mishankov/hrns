@@ -1,0 +1,19 @@
+version: "3"
+
+tasks:
+  test:
+    desc: Run the Go test suite
+    cmds:
+      - go test -cover ./...
+
+  docs:dev:
+    desc: Run the Mintlify docs dev server
+    dir: docs
+    cmds:
+      - mint dev
+
+  docs:check:
+    desc: Check the docs for broken links
+    dir: docs
+    cmds:
+      - mint broken-links

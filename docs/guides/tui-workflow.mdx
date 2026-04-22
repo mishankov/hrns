@@ -1,0 +1,92 @@
+---
+title: "TUI workflow"
+description: "Use the bundled terminal interface to probe prompts, tools, and model behavior."
+---
+
+## What the TUI is for
+
+The TUI is the fastest way to poke at the loop without writing extra code. It is useful for:
+
+- trying prompts
+- watching streamed output
+- seeing when tool calls happen
+- checking that your provider configuration works
+
+It is not a general CLI framework. Today it is a small interactive shell around `loop.RunLoop`.
+
+## Starting a session
+
+Run:
+
+```bash
+go run .
+```
+
+The app prints the active model and waits for input.
+
+## Built-in commands
+
+### Change model
+
+```text
+/model <model>
+```
+
+This only changes the in-memory model for the current TUI session.
+
+### Reset conversation
+
+```text
+/new
+```
+
+This clears the accumulated conversation history.
+
+### Show help
+
+```text
+/help
+```
+
+This prints the available commands.
+
+## What gets streamed back
+
+The loop emits chunk types and the TUI renders them differently:
+
+- assistant text chunks
+- reasoning chunks
+- tool call start notifications
+- error chunks
+
+Tool-call results are used to continue the conversation, but the current TUI does not print the raw tool result body back to the screen as a separate visible block.
+
+## Session behavior
+
+The TUI keeps a `messages` slice in memory and appends your prompts plus assistant/tool messages after each turn. That means later prompts in the same session include earlier context unless you run `/new`.
+
+## Good prompts for exploration
+
+Use prompts that make the model inspect the repo:
+
+```text
+Read main.go and explain how hrns boots.
+```
+
+```text
+List the files in ./skills and summarize how skills are discovered.
+```
+
+```text
+Fetch https://example.com and tell me what came back.
+```
+
+## Known limits
+
+- The default model is hardcoded.
+- The system prompt is hardcoded.
+- There is no persistent config file.
+- There is no non-interactive `exec` mode.
+- `/model` expects an argument.
+
+For anything beyond quick experiments, build your own entrypoint on top of the packages instead of stretching the TUI too far.

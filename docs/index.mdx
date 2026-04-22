@@ -1,0 +1,54 @@
+---
+title: "hrns"
+description: "A minimal Go harness for experimenting with tool-using AI agents and embedding them in your own code."
+---
+
+`hrns` is a small Go project that gives you the core pieces of an agent harness without hiding the mechanics:
+
+- a streaming chat client for OpenAI-compatible `/chat/completions`
+- an agent loop that can execute tool calls and continue the conversation
+- a tiny interactive TUI for manual testing
+- a lightweight skill loader that exposes prompt files as a tool
+
+If you want to play with agents, inspect the moving parts, and then reuse the same pieces inside your own Go code, this repo is aimed at exactly that.
+
+## What exists today
+
+The current repo behavior is intentionally narrow:
+
+- The binary starts an interactive TUI.
+- The TUI defaults to the hardcoded model `kimi-k2.6`.
+- The app builds an OpenAI-compatible client from environment variables.
+- The default system prompt is hardcoded in `main.go`.
+- Built-in tools cover file reads, basic file edits, directory globbing, shell commands, HTTP fetches, and skill loading.
+- Skills are discovered from `~/.agents/skills` and `./.agents/skills`.
+
+This documentation describes current behavior only. It does not document items from `TODO.md` as if they already exist.
+
+## Start here
+
+<CardGroup cols={2}>
+  <Card title="Quickstart" icon="rocket" href="/quickstart">
+    Run the bundled TUI, configure a provider, and send your first prompt.
+  </Card>
+  <Card title="Provider setup" icon="plug" href="/guides/provider-setup">
+    Point hrns at any OpenAI-compatible endpoint with the supported environment variables.
+  </Card>
+  <Card title="Embed in Go" icon="code" href="/guides/embed-in-go">
+    Build your own agent wrapper by composing `openai.Client`, `loop.Loop`, and your own tools.
+  </Card>
+  <Card title="Add a tool" icon="screwdriver-wrench" href="/guides/add-a-tool">
+    Extend the loop with custom tool implementations and simple schemas.
+  </Card>
+</CardGroup>
+
+## Mental model
+
+The runtime flow is small enough to keep in your head:
+
+1. `main.go` builds a client, loads skills, assembles the tool map, and starts the TUI.
+2. The TUI collects user input and sends the conversation to `loop.RunLoop`.
+3. `loop.RunLoop` streams assistant output, accumulates tool calls, executes tools, appends tool results, and re-prompts the model until no more tools are called.
+4. Streamed chunks are printed back to the terminal as assistant text, reasoning text, or tool-call notices.
+
+If you want the fuller breakdown, read the [architecture guide](/internals/architecture).

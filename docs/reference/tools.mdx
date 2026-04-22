@@ -1,0 +1,58 @@
+---
+title: "Package reference: tools"
+description: "The bundled tool implementations shipped with hrns."
+---
+
+## Purpose
+
+The `tools` package provides a handful of concrete tools used by the default app.
+
+## `ReadFileTool`
+
+- description: reads a file from the filesystem
+- arguments: `fileName`
+- return value: file contents as a string
+
+If the argument is missing, invalid, or the file cannot be read, it returns an error string.
+
+## `ListFilesTool`
+
+- description: lists files in a directory using a glob pattern
+- arguments: `dir`, `globPattern`
+- return value: a JSON array of matching paths
+
+It uses Go's `fs.Glob` against `os.DirFS(dir)`. That means it is a glob-based directory listing helper, not a custom recursive walker.
+
+## `WriteFileTool`
+
+- description: replaces the first occurrence of `oldString` with `newString` in a file
+- arguments: `fileName`, `oldString`, `newString`
+- return value: `"OK"` on success
+
+Current behavior is important here:
+
+- if the file does not exist, the tool creates it with `newString` as the full contents
+- if the file exists, only the first occurrence is replaced
+- if `oldString` is not found, the write still succeeds and the file stays unchanged
+
+## `CommandTool`
+
+- description: runs a shell command
+- arguments: `command`
+- return value: combined stdout and stderr on success
+
+On Unix-like systems it runs `/bin/sh -c <command>`. On Windows it uses `cmd /C <command>`.
+
+This is intentionally powerful and intentionally dangerous. The package adds no sandboxing of its own.
+
+## `WebFetchTool`
+
+- description: fetches content from a URL
+- arguments: `url`
+- return value: response body as a string
+
+It uses a 1-minute timeout and returns the raw response body without special parsing.
+
+## Helper: `StringArg`
+
+`StringArg(args, name)` is the small helper used by the bundled tools to validate and extract string arguments from `map[string]any`.

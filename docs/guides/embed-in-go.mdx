@@ -1,0 +1,111 @@
+---
+title: "Embed hrns in your Go code"
+description: "Compose the hrns packages directly when you want your own agent runtime instead of the bundled TUI."
+---
+
+## Why embed it
+
+The repo's main program is intentionally tiny and hardcoded. If you want to:
+
+- control the system prompt
+- choose your own default model
+- expose different tools
+- swap the UI layer
+- integrate with your application state
+
+then you should assemble the packages directly in your own Go code.
+
+## Minimal example
+
+```go
+package main
+
+import (
+    "context"
+    "fmt"
+
+    "github.com/mishankov/hrns/loop"
+    "github.com/mishankov/hrns/openai"
+)
+
+func main() {
+    ctx := context.Background()
+
+    client := openai.NewClient(
+        openai.WithBaseURL("https://your-provider.example/v1"),
+        openai.WithAPIKey("your-api-key"),
+    )
+
+    agent := loop.New(
+        client,
+        "You are a precise coding assistant.",
+        map[string]loop.Tool{
+            "echo": loop.NewSimpleTool(
+                "Echoes text back to the model",
+                []loop.ToolArgument{{Name: "value", Type: "string"}},
+                func(args map[string]any) string {
+                    value, _ := args["value"].(string)
+                    return "echo: " + value
+                },
+            ),
+        },
+    )
+
+    messages := []openai.Message{
+        openai.UserMessage("Call echo with the word hello."),
+    }
+
+    go agent.RunLoop(ctx, messages, "your-model")
+
+    for chunk := range agent.Chunks() {
+        fmt.Printf("%s %#v\n", chunk.Type, chunk)
+        if chunk.Type == loop.ChunkTypeEnd {
+            break
+        }
+    }
+}
+```
+
+## The three pieces you compose
+
+### `openai.Client`
+
+Responsible for HTTP requests and streaming SSE responses from an OpenAI-compatible endpoint.
+
+### `loop.Loop`
+
+Owns the agent loop:
+
+- prepends the system message
+- advertises tool schemas
+- streams assistant deltas
+- accumulates tool calls
+- executes tools
+- appends tool results
+- continues until no more tools are called
+
+### Your tools
+
+You supply a `map[string]loop.Tool`. Each tool becomes a function-style schema in the model request.
+
+## Collecting the final conversation
+
+After `RunLoop` finishes, call:
+
+```go
+messages := agent.Messages()
+```
+
+That returns the stored conversation, including assistant and tool messages produced during the run.
+
+## A common pattern
+
+In a real application, it is normal to keep `hrns` as the thin agent core and put your policy around it:
+
+- validate user input before creating messages
+- choose the model outside the TUI
+- wrap tools with logging or authorization
+- persist `agent.Messages()` somewhere else
+- render `agent.Chunks()` in your own UI
+
+That is the intended strength of this repo: small parts you can reason about and reassemble.
