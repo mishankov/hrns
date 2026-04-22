@@ -21,8 +21,12 @@ var ReadFileTool = loop.NewSimpleTool(
 	"Reads file from filesystem",
 	[]loop.ToolArgument{{Name: "fileName", Type: "string"}},
 	func(args map[string]any) string {
-		// TODO: make safe type assertions
-		dat, err := os.ReadFile(args["fileName"].(string))
+		fileName, err := StringArg(args, "fileName")
+		if err != nil {
+			return "ERROR: tools calling error: " + err.Error()
+		}
+
+		dat, err := os.ReadFile(fileName)
 		if err != nil {
 			return "ERROR: tools calling error: " + err.Error()
 		} else {
@@ -35,10 +39,19 @@ var ListFilesTool = loop.NewSimpleTool(
 	"Lists files in directory using glob pattern",
 	[]loop.ToolArgument{{Name: "dir", Type: "string"}, {Name: "globPattern", Type: "string"}},
 	func(args map[string]any) string {
-		// TODO: make safe type assertions
-		root := os.DirFS(args["dir"].(string))
+		dir, err := StringArg(args, "dir")
+		if err != nil {
+			return "ERROR: tools calling error: " + err.Error()
+		}
 
-		mdFiles, err := fs.Glob(root, args["globPattern"].(string))
+		globPattern, err := StringArg(args, "globPattern")
+		if err != nil {
+			return "ERROR: tools calling error: " + err.Error()
+		}
+
+		root := os.DirFS(dir)
+
+		mdFiles, err := fs.Glob(root, globPattern)
 
 		if err != nil {
 			log.Fatal(err)
@@ -46,7 +59,7 @@ var ListFilesTool = loop.NewSimpleTool(
 
 		var files []string
 		for _, v := range mdFiles {
-			files = append(files, path.Join(args["dir"].(string), v))
+			files = append(files, path.Join(dir, v))
 		}
 
 		data, err := json.Marshal(files)
@@ -62,10 +75,20 @@ var WriteFileTool = loop.NewSimpleTool(
 	"Replaces first occurence of oldString with newString in a file",
 	[]loop.ToolArgument{{Name: "fileName", Type: "string"}, {Name: "oldString", Type: "string"}, {Name: "newString", Type: "string"}},
 	func(args map[string]any) string {
-		// TODO: make safe type assertions
-		fileName := args["fileName"].(string)
-		oldString := args["oldString"].(string)
-		newString := args["newString"].(string)
+		fileName, err := StringArg(args, "fileName")
+		if err != nil {
+			return "ERROR: tools calling error: " + err.Error()
+		}
+
+		oldString, err := StringArg(args, "oldString")
+		if err != nil {
+			return "ERROR: tools calling error: " + err.Error()
+		}
+
+		newString, err := StringArg(args, "newString")
+		if err != nil {
+			return "ERROR: tools calling error: " + err.Error()
+		}
 
 		dat, err := os.ReadFile(fileName)
 		if errors.Is(err, fs.ErrNotExist) {
@@ -94,8 +117,10 @@ var CommandTool = loop.NewSimpleTool(
 	"Runs shell command",
 	[]loop.ToolArgument{{Name: "command", Type: "string"}},
 	func(args map[string]any) string {
-		// TODO: make safe type assertions
-		command := args["command"].(string)
+		command, err := StringArg(args, "command")
+		if err != nil {
+			return "ERROR: tools calling error: " + err.Error()
+		}
 
 		var cmd *exec.Cmd
 		if runtime.GOOS == "windows" {
@@ -117,8 +142,10 @@ var WebFetchTool = loop.NewSimpleTool(
 	"Fetches content from URL",
 	[]loop.ToolArgument{{Name: "url", Type: "string"}},
 	func(args map[string]any) string {
-		// TODO: make safe type assertions
-		url := args["url"].(string)
+		url, err := StringArg(args, "url")
+		if err != nil {
+			return "ERROR: tools calling error: " + err.Error()
+		}
 
 		client := http.Client{
 			Timeout: 1 * time.Minute,

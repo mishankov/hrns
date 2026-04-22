@@ -44,6 +44,36 @@ func TestReadFileToolReturnsErrorForMissingFile(t *testing.T) {
 	}
 }
 
+func TestReadFileToolReturnsErrorForMissingOrInvalidArgument(t *testing.T) {
+	t.Parallel()
+
+	testCases := []struct {
+		name string
+		args map[string]any
+	}{
+		{
+			name: "missing argument",
+			args: map[string]any{},
+		},
+		{
+			name: "invalid type",
+			args: map[string]any{"fileName": 123},
+		},
+	}
+
+	for _, tc := range testCases {
+		tc := tc
+		t.Run(tc.name, func(t *testing.T) {
+			t.Parallel()
+
+			got := tools.ReadFileTool.Call(tc.args)
+			if !strings.HasPrefix(got, "ERROR: tools calling error: ") {
+				t.Fatalf("Call() = %q, want tools calling error", got)
+			}
+		})
+	}
+}
+
 func TestListFilesTool(t *testing.T) {
 	t.Parallel()
 
@@ -176,6 +206,15 @@ func TestCommandToolReturnsErrorForFailingCommand(t *testing.T) {
 	}
 }
 
+func TestCommandToolReturnsErrorForInvalidArgument(t *testing.T) {
+	t.Parallel()
+
+	got := tools.CommandTool.Call(map[string]any{"command": 123})
+	if !strings.HasPrefix(got, "ERROR: tools calling error: ") {
+		t.Fatalf("Call() = %q, want tools calling error", got)
+	}
+}
+
 func TestWebFetchTool(t *testing.T) {
 	t.Parallel()
 
@@ -201,6 +240,38 @@ func TestWebFetchToolReturnsErrorForInvalidURL(t *testing.T) {
 	t.Parallel()
 
 	got := tools.WebFetchTool.Call(map[string]any{"url": "://bad url"})
+	if !strings.HasPrefix(got, "ERROR: tools calling error: ") {
+		t.Fatalf("Call() = %q, want tools calling error", got)
+	}
+}
+
+func TestWriteFileToolReturnsErrorForInvalidArgument(t *testing.T) {
+	t.Parallel()
+
+	got := tools.WriteFileTool.Call(map[string]any{
+		"fileName": 123,
+	})
+	if !strings.HasPrefix(got, "ERROR: tools calling error: ") {
+		t.Fatalf("Call() = %q, want tools calling error", got)
+	}
+}
+
+func TestListFilesToolReturnsErrorForInvalidArgument(t *testing.T) {
+	t.Parallel()
+
+	got := tools.ListFilesTool.Call(map[string]any{
+		"dir":         t.TempDir(),
+		"globPattern": 123,
+	})
+	if !strings.HasPrefix(got, "ERROR: tools calling error: ") {
+		t.Fatalf("Call() = %q, want tools calling error", got)
+	}
+}
+
+func TestWebFetchToolReturnsErrorForMissingArgument(t *testing.T) {
+	t.Parallel()
+
+	got := tools.WebFetchTool.Call(map[string]any{})
 	if !strings.HasPrefix(got, "ERROR: tools calling error: ") {
 		t.Fatalf("Call() = %q, want tools calling error", got)
 	}

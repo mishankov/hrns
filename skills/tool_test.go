@@ -58,3 +58,14 @@ func TestLoadSkillToolCallReturnsErrorsForUnknownOrUnreadableSkill(t *testing.T)
 		t.Fatalf("Call(unreadable) = %q, want loading error", got)
 	}
 }
+
+func TestLoadSkillToolCallReturnsErrorForInvalidArgument(t *testing.T) {
+	t.Parallel()
+
+	tool := skills.NewLoadSkillTool(nil)
+
+	got := tool.Call(map[string]any{"name": 123})
+	if !strings.HasPrefix(got, "ERROR: loading skill argument:") {
+		t.Fatalf("Call(invalid arg) = %q, want argument error", got)
+	}
+}

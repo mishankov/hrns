@@ -4,6 +4,7 @@ import (
 	"os"
 
 	"github.com/mishankov/hrns/loop"
+	"github.com/mishankov/hrns/tools"
 )
 
 type LoadSkillTool struct {
@@ -25,8 +26,10 @@ func (t *LoadSkillTool) Arguments() []loop.ToolArgument {
 }
 
 func (t *LoadSkillTool) Call(args map[string]any) string {
-	// TODO: make safe type assertions
-	name := args["name"].(string)
+	name, err := tools.StringArg(args, "name")
+	if err != nil {
+		return "ERROR: loading skill argument: " + err.Error()
+	}
 
 	for _, skill := range t.skills {
 		if skill.Name == name {
