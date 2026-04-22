@@ -10,7 +10,7 @@ import (
 	"net/http"
 	"os"
 	"os/exec"
-	"path"
+	"path/filepath"
 	"runtime"
 	"time"
 
@@ -59,7 +59,7 @@ var ListFilesTool = loop.NewSimpleTool(
 
 		var files []string
 		for _, v := range mdFiles {
-			files = append(files, path.Join(dir, v))
+			files = append(files, filepath.Join(dir, v))
 		}
 
 		data, err := json.Marshal(files)
