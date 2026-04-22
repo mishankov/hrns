@@ -78,6 +78,7 @@ func GetSkillData(path string) (*Skill, error) {
 	if err != nil {
 		return nil, fmt.Errorf("Error reading %s: %w", path, err)
 	}
+	defer fileReader.Close()
 
 	var metadata skillMetadata
 	_, err = frontmatter.Parse(fileReader, &metadata)
