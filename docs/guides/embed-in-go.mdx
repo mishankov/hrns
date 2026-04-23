@@ -38,7 +38,6 @@ func main() {
 
     agent := loop.New(
         client,
-        "You are a precise coding assistant.",
         map[string]loop.Tool{
             "echo": loop.NewSimpleTool(
                 "Echoes text back to the model",
@@ -52,6 +51,7 @@ func main() {
     )
 
     messages := []openai.Message{
+        openai.SystemMessage("You are a precise coding assistant."),
         openai.UserMessage("Call echo with the word hello."),
     }
 
@@ -76,13 +76,14 @@ Responsible for HTTP requests and streaming SSE responses from an OpenAI-compati
 
 Owns the agent loop:
 
-- prepends the system message
 - advertises tool schemas
 - streams assistant deltas
 - accumulates tool calls
 - executes tools
 - appends tool results
 - continues until no more tools are called
+
+You provide the system prompt yourself by putting `openai.SystemMessage(...)` in the `messages` slice before calling `RunLoop`.
 
 ### Your tools
 

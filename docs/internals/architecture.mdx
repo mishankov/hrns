@@ -31,7 +31,7 @@ Inside `tui.Run`, startup continues like this:
 2. if the file is missing or has no providers, run onboarding
 3. pick `currentProvider`
 4. build `openai.Client` from that provider's `url`, `key`, and `skipVerify`
-5. create `loop.Loop` with the stored system prompt and tools
+5. create `loop.Loop` with the current client and tools
 
 ## Request lifecycle
 
@@ -39,13 +39,12 @@ For each user turn in the TUI:
 
 1. the TUI appends a `user` message to the current session
 2. it starts `RunLoop` with the current message history and chosen model
-3. `RunLoop` prepends the system message
-4. `RunLoop` converts registered tools into OpenAI-style function schemas
-5. `openai.Client.StreamChatCompletion` streams SSE events from `/chat/completions`
-6. `loop` emits chunks for assistant text, reasoning, and tool call events
-7. if the model called tools, `loop` executes them and appends `tool` messages
-8. the loop repeats until a streamed response finishes without tool calls
-9. the TUI updates its in-memory conversation from `agent.Messages()`
+3. `RunLoop` converts registered tools into OpenAI-style function schemas
+4. `openai.Client.StreamChatCompletion` streams SSE events from `/chat/completions`
+5. `loop` emits chunks for assistant text, reasoning, and tool call events
+6. if the model called tools, `loop` executes them and appends `tool` messages
+7. the loop repeats until a streamed response finishes without tool calls
+8. the TUI updates its in-memory conversation from `agent.Messages()`
 
 ## Stream accumulation
 
@@ -80,7 +79,6 @@ Two kinds of state matter:
 `loop.Loop` stores:
 
 - the client
-- the system prompt
 - the tool map
 - the last completed message history
 - a chunk channel
@@ -104,7 +102,7 @@ The architecture is small on purpose, but that comes with hard edges:
 - system prompt is hardcoded in `main.go`
 - tool schemas are flat and fully required
 - tool results are plain strings
-- provider connections are not switched live after `/connect`
+- `/connect` updates saved config, but only `/provider <name>` rebuilds the live client
 - the bundled entrypoint is interactive only
 
 Those limits are acceptable for experiments and for library-style embedding, where you own the outer application.

@@ -25,7 +25,7 @@ Starts the read-eval-print loop:
 - loads `~/.config/hrns/config.json`
 - runs onboarding if the config file is missing or empty
 - builds `openai.Client` for the current provider
-- constructs `loop.Loop` from the stored system prompt and tools
+- constructs `loop.Loop` from the current client and registered tools
 - prints the banner
 - prints the active provider and model
 - reads a line from stdin
@@ -39,13 +39,15 @@ Starts the read-eval-print loop:
 
 The package currently handles:
 
+- `/models`
 - `/model <model>`
+- `/provider <name>`
 - `/new`
 - `/providers`
 - `/connect`
 - `/help`
 
-Command parsing is still basic string splitting. Model changes are persisted to the config file. Provider additions are also persisted, but the active session client is not rebuilt after `/connect`.
+Command parsing is still basic string splitting. Model changes are persisted to the config file. `/provider <name>` also persists `currentProvider` and rebuilds the in-memory client. `/connect` saves a new provider entry and updates `currentProvider`, but it does not switch the live client by itself.
 
 ## Rendering behavior
 

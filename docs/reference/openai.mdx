@@ -5,7 +5,7 @@ description: "OpenAI-compatible request, response, and streaming primitives used
 
 ## Purpose
 
-The `openai` package is a small client plus a few data structures for chat completions and streamed deltas.
+The `openai` package is a small client plus a few data structures for model listing, chat completions, and streamed deltas.
 
 ## Client construction
 
@@ -25,6 +25,16 @@ Defaults:
 - request timeout on the default client: 5 minutes
 
 ## Request methods
+
+### `ListModels`
+
+Sends a `GET` request to:
+
+```text
+/models
+```
+
+It returns the non-empty model IDs from the response body and surfaces non-2xx responses as `*openai.APIError`.
 
 ### `CreateChatCompletion`
 
@@ -81,7 +91,7 @@ Use `openai.MessageText(...)` when you expect plain string content and want the 
 
 ## Error model
 
-Non-2xx API responses return `*openai.APIError`, which includes:
+Non-2xx API responses from `ListModels`, `CreateChatCompletion`, and `StreamChatCompletion` return `*openai.APIError`, which includes:
 
 - `StatusCode`
 - `Message`

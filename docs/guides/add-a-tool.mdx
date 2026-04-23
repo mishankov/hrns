@@ -41,10 +41,12 @@ tool := loop.NewSimpleTool(
 Then register it:
 
 ```go
-agent := loop.New(client, prompt, map[string]loop.Tool{
+agent := loop.New(client, map[string]loop.Tool{
     "lookup_project": tool,
 })
 ```
+
+Pass your system prompt as an `openai.SystemMessage(...)` in the `messages` slice when you call `RunLoop`.
 
 ## Example: custom tool type
 

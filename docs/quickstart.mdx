@@ -88,12 +88,14 @@ To change the saved model for the current provider:
 
 Other built-in commands:
 
+- `/models` lists models from the current provider's `/models` endpoint
+- `/provider <name>` switches the active provider for this session and saves it as current
 - `/new` resets the conversation history
 - `/help` prints the command list
 - `/providers` lists saved providers
 - `/connect` adds another provider to the config file
 
-The current implementation saves new providers through `/connect`, but it does not rebuild the active client for the same session. Restart the app to use the newly connected provider.
+`/connect` saves a provider entry and updates `currentProvider` in the config file, but it does not rebuild the active client for the same session. If you want to start using the new provider right away, run `/provider <name>` after connecting it.
 
 ## 4. Send a prompt that can use tools
 
@@ -111,6 +113,7 @@ The bundled app is intentionally opinionated and minimal:
 
 - The system prompt is hardcoded in `main.go`.
 - Provider configuration is stored in `~/.config/hrns/config.json`.
+- The TUI can store multiple named providers and switch between them with `/provider <name>`.
 - Skills are loaded automatically from the default roots if present.
 - There is no non-interactive CLI mode yet.
 

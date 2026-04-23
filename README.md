@@ -50,13 +50,15 @@ After onboarding, later runs reuse the saved config and print the active provide
 
 Built-in commands:
 
+- `/models` lists models exposed by the current provider's `/models` endpoint
 - `/model <model>` updates the current provider's saved default model
 - `/new` starts a fresh conversation
 - `/help` shows the command list
 - `/providers` lists saved providers
+- `/provider <name>` switches the active provider, rebuilds the client, and saves it as current
 - `/connect` adds another provider to the saved config
 
-Note: `/connect` persists a new provider configuration, but the current session keeps using the client that was created at startup. Restart the app to begin using the newly connected provider.
+Note: `/connect` persists a new provider configuration and marks it as `currentProvider` in the config file, but it does not rebuild the active in-memory client. Use `/provider <name>` to switch immediately, or restart the app to pick up the saved current provider on startup.
 
 ## Configuration
 

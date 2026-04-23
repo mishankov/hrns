@@ -34,6 +34,14 @@ On first run, the app launches onboarding and writes `~/.config/hrns/config.json
 
 This updates the current provider's saved default model in the config file.
 
+### List available models
+
+```text
+/models
+```
+
+This sends `GET /models` to the current provider and prints the returned model IDs.
+
 ### Reset conversation
 
 ```text
@@ -57,6 +65,14 @@ This prints the available commands.
 ```
 
 This prints the names of providers stored in the config file.
+
+### Switch provider
+
+```text
+/provider <name>
+```
+
+This saves `currentProvider`, rebuilds the OpenAI-compatible client, and keeps the current conversation history in memory.
 
 ### Add a provider
 
@@ -85,7 +101,8 @@ Provider state is slightly different:
 
 - the provider client is built once when the TUI starts
 - `/model` persists a new model value for the current provider
-- `/connect` saves another provider, but the active session keeps using the client that was already created
+- `/provider <name>` rebuilds the client and updates the active model for the session
+- `/connect` saves another provider and updates `currentProvider` in the config file, but the active session keeps using the existing client until you run `/provider <name>` or restart
 
 ## Good prompts for exploration
 
@@ -106,7 +123,7 @@ Fetch https://example.com and tell me what came back.
 ## Known limits
 
 - The system prompt is hardcoded.
-- Provider switching is not live; restart after `/connect`.
+- `/connect` alone does not switch the live client.
 - There is no non-interactive `exec` mode.
 - `/model` expects an argument.
 

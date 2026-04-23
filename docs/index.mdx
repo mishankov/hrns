@@ -18,7 +18,7 @@ The current repo behavior is intentionally narrow:
 
 - The binary starts an interactive TUI.
 - The TUI creates a persisted provider config on first run.
-- The TUI builds an OpenAI-compatible client from the saved current provider.
+- The TUI stores multiple named providers and builds an OpenAI-compatible client from the saved current provider.
 - The default system prompt is hardcoded in `main.go`.
 - Built-in tools cover file reads, basic file edits, directory globbing, shell commands, HTTP fetches, and skill loading.
 - Skills are discovered from `~/.agents/skills` and `./.agents/skills`.

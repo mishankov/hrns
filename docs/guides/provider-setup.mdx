@@ -78,6 +78,12 @@ Set:
 
 Provider configuration and model selection are separate concerns.
 
+You can inspect the models exposed by the current provider with:
+
+```text
+/models
+```
+
 You can change the saved model for the current provider at runtime:
 
 ```text
@@ -90,7 +96,13 @@ You can also add more providers with:
 /connect
 ```
 
-The current implementation saves the new provider and marks it as current in the config file, but it does not rebuild the in-memory client for the existing session. Restart the TUI to actually talk to that provider.
+To switch the active session to a saved provider:
+
+```text
+/provider <name>
+```
+
+`/connect` saves the new provider and marks it as `currentProvider` in the config file, but it does not rebuild the in-memory client by itself. Use `/provider <name>` to switch immediately, or restart the TUI to start with the saved current provider.
 
 ## When embedding instead of using the TUI
 

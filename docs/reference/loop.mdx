@@ -40,22 +40,21 @@ Use `NewSimpleTool(...)` when a closure is enough and you do not need a custom t
 Created with:
 
 ```go
-loop.New(openAIClient, systemPrompt, tools)
+loop.New(openAIClient, tools)
 ```
 
-It stores the client, the system prompt, the tool map, the last completed message history, and a chunk channel.
+It stores the client, the tool map, the last completed message history, and a chunk channel.
 
 ## `RunLoop`
 
 `RunLoop(ctx, messages, model)` does the core work:
 
-1. prepends the system message
-2. translates tools into function schemas
-3. starts a streamed chat completion
-4. emits output chunks while streaming
-5. accumulates the final assistant message and any tool calls
-6. executes tool calls and appends tool messages
-7. repeats until the assistant turn finishes without tool calls
+1. translates tools into function schemas
+2. starts a streamed chat completion with the `messages` slice you passed in
+3. emits output chunks while streaming
+4. accumulates the final assistant message and any tool calls
+5. executes tool calls and appends tool messages
+6. repeats until the assistant turn finishes without tool calls
 
 When the run completes, it stores the final messages and emits `ChunkTypeEnd`.
 
