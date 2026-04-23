@@ -4,6 +4,7 @@ import (
 	"context"
 	"crypto/tls"
 	"errors"
+	"maps"
 	"net/http"
 	"os"
 	"slices"
@@ -28,9 +29,7 @@ func WithTool(name string, tool loop.Tool) Option {
 
 func WithTools(tools map[string]loop.Tool) Option {
 	return func(app *TUIApp) {
-		for name, tool := range tools {
-			app.tools[name] = tool
-		}
+		maps.Copy(app.tools, tools)
 	}
 }
 
