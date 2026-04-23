@@ -13,7 +13,6 @@ type ChatCompletionStreamer interface {
 
 type Loop struct {
 	openAIClient ChatCompletionStreamer
-	model        string
 	tools        map[string]Tool
 	messages     []openai.Message
 	chunkCh      chan Chunk
