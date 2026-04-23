@@ -55,6 +55,56 @@ func NewClient(opts ...ClientOption) *Client {
 	return c
 }
 
+func (c *Client) ListModels(ctx context.Context) ([]string, error) {
+	req, err := http.NewRequestWithContext(
+		ctx,
+		http.MethodGet,
+		c.BaseURL+"/models",
+		nil,
+	)
+	if err != nil {
+		return nil, fmt.Errorf("create request: %w", err)
+	}
+
+	c.applyHeaders(req)
+
+	resp, err := c.httpClient().Do(req)
+	if err != nil {
+		return nil, fmt.Errorf("do request: %w", err)
+	}
+	defer resp.Body.Close()
+
+	respBody, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return nil, fmt.Errorf("read response: %w", err)
+	}
+
+	if resp.StatusCode < 200 || resp.StatusCode >= 300 {
+		return nil, &APIError{
+			StatusCode: resp.StatusCode,
+			Message:    extractErrorMessage(respBody),
+			Body:       respBody,
+		}
+	}
+
+	var out struct {
+		Data []struct {
+			ID string `json:"id"`
+		} `json:"data"`
+	}
+	if err := json.Unmarshal(respBody, &out); err != nil {
+		return nil, fmt.Errorf("unmarshal response: %w", err)
+	}
+
+	models := make([]string, 0, len(out.Data))
+	for _, model := range out.Data {
+		if model.ID != "" {
+			models = append(models, model.ID)
+		}
+	}
+	return models, nil
+}
+
 func (c *Client) CreateChatCompletion(
 	ctx context.Context,
 	reqBody ChatCompletionRequest,

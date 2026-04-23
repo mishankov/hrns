@@ -49,6 +49,12 @@ func PrintNewLine() {
 	print("\n")
 }
 
+func PrintWelcomeMessage(provider, model string) {
+	PrintHarnessMessage("HRNS loop. dev")
+	PrintHarnessMessage("Provider: " + provider)
+	PrintHarnessMessage("Model: " + model)
+}
+
 func GetUserInput() string {
 	reader := bufio.NewReader(os.Stdin)
 	PrintUserInputPrompt()

@@ -6,6 +6,7 @@ import (
 	"errors"
 	"net/http"
 	"net/http/httptest"
+	"slices"
 	"testing"
 
 	"github.com/mishankov/hrns/openai"
@@ -24,6 +25,93 @@ func TestClientNewClientDefaults(t *testing.T) {
 	}
 	if client.HTTPClient == nil {
 		t.Fatal("HTTPClient = nil, want non-nil")
+	}
+}
+
+func TestClientListModelsUsesConfiguredBaseURLAndAPIKey(t *testing.T) {
+	t.Parallel()
+
+	type recordedRequest struct {
+		Method        string
+		Path          string
+		Authorization string
+	}
+
+	got := make(chan recordedRequest, 1)
+
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		defer r.Body.Close()
+
+		got <- recordedRequest{
+			Method:        r.Method,
+			Path:          r.URL.Path,
+			Authorization: r.Header.Get("Authorization"),
+		}
+
+		w.Header().Set("Content-Type", "application/json")
+		_, _ = w.Write([]byte(`{
+			"object":"list",
+			"data":[
+				{"id":"gpt-4.1","object":"model"},
+				{"id":"","object":"model"},
+				{"id":"gpt-4.1-mini","object":"model"}
+			]
+		}`))
+	}))
+	defer server.Close()
+
+	client := openai.NewClient(
+		openai.WithBaseURL(server.URL+"/"),
+		openai.WithAPIKey("secret"),
+	)
+
+	models, err := client.ListModels(context.Background())
+	if err != nil {
+		t.Fatalf("ListModels returned error: %v", err)
+	}
+
+	request := <-got
+	if request.Method != http.MethodGet {
+		t.Fatalf("method = %q, want %q", request.Method, http.MethodGet)
+	}
+	if request.Path != "/models" {
+		t.Fatalf("path = %q, want %q", request.Path, "/models")
+	}
+	if request.Authorization != "Bearer secret" {
+		t.Fatalf("authorization = %q, want %q", request.Authorization, "Bearer secret")
+	}
+
+	want := []string{"gpt-4.1", "gpt-4.1-mini"}
+	if !slices.Equal(models, want) {
+		t.Fatalf("models = %#v, want %#v", models, want)
+	}
+}
+
+func TestClientListModelsReturnsAPIErrors(t *testing.T) {
+	t.Parallel()
+
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(http.StatusNotFound)
+		_, _ = w.Write([]byte(`{"error":{"message":"models endpoint unavailable"}}`))
+	}))
+	defer server.Close()
+
+	client := openai.NewClient(openai.WithBaseURL(server.URL))
+
+	_, err := client.ListModels(context.Background())
+	if err == nil {
+		t.Fatal("expected error, got nil")
+	}
+
+	var apiErr *openai.APIError
+	if !errors.As(err, &apiErr) {
+		t.Fatalf("error type = %T, want *openai.APIError", err)
+	}
+	if apiErr.StatusCode != http.StatusNotFound {
+		t.Fatalf("status code = %d, want %d", apiErr.StatusCode, http.StatusNotFound)
+	}
+	if apiErr.Message != "models endpoint unavailable" {
+		t.Fatalf("message = %q, want %q", apiErr.Message, "models endpoint unavailable")
 	}
 }
 
