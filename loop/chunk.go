@@ -1,5 +1,7 @@
 package loop
 
+import "slices"
+
 type ChunkType string
 
 const (
@@ -17,6 +19,10 @@ type Chunk struct {
 	Text     string
 	ToolName string
 	ToolArgs map[string]any
+}
+
+func (c Chunk) IsToolChunk() bool {
+	return slices.Contains([]ChunkType{ChunkTypeToolCallStart, ChunkTypeToolCallError, ChunkTypeToolCallResult}, c.Type)
 }
 
 func NewChunkMessage(text string) Chunk {

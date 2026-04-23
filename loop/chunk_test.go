@@ -62,3 +62,60 @@ func TestChunkConstructors(t *testing.T) {
 		t.Fatalf("NewChunkEnd() = %#v", got)
 	}
 }
+
+func TestChunkIsToolChunk(t *testing.T) {
+	t.Parallel()
+
+	tests := []struct {
+		name  string
+		chunk loop.Chunk
+		want  bool
+	}{
+		{
+			name:  "message",
+			chunk: loop.NewChunkMessage("hello"),
+			want:  false,
+		},
+		{
+			name:  "reasoning",
+			chunk: loop.NewChunkReasoning("thinking"),
+			want:  false,
+		},
+		{
+			name:  "error",
+			chunk: loop.NewChunkError("boom"),
+			want:  false,
+		},
+		{
+			name:  "tool call start",
+			chunk: loop.NewChunkToolCallStart("load_skill", map[string]any{}),
+			want:  true,
+		},
+		{
+			name:  "tool call error",
+			chunk: loop.NewChunkToolCallError("load_skill", "missing"),
+			want:  true,
+		},
+		{
+			name:  "tool call result",
+			chunk: loop.NewChunkToolCallResult("load_skill", "body"),
+			want:  true,
+		},
+		{
+			name:  "end",
+			chunk: loop.NewChunkEnd(),
+			want:  false,
+		},
+	}
+
+	for _, tt := range tests {
+		tt := tt
+		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+
+			if got := tt.chunk.IsToolChunk(); got != tt.want {
+				t.Fatalf("IsToolChunk() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}

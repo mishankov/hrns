@@ -171,16 +171,16 @@ func (app *TUIApp) Run(ctx context.Context) {
 
 		go agnt.RunLoop(ctx, messages, model)
 
-		lastChunkType := loop.ChunkType("")
+		lastChunk := loop.Chunk{}
 		for chunk := range agnt.Chunks() {
 			toBreak := false
 
-			if chunk.Type != lastChunkType {
-				if !(slices.Contains([]loop.ChunkType{loop.ChunkTypeToolCallResult, loop.ChunkTypeToolCallError, loop.ChunkTypeToolCallStart}, lastChunkType) && slices.Contains([]loop.ChunkType{loop.ChunkTypeToolCallResult, loop.ChunkTypeToolCallError, loop.ChunkTypeToolCallStart}, chunk.Type)) {
+			if chunk.Type != lastChunk.Type {
+				if !lastChunk.IsToolChunk() || !chunk.IsToolChunk() {
 					PrintNewLine()
 				}
 
-				if slices.Contains([]loop.ChunkType{loop.ChunkTypeMessage, loop.ChunkTypeReasoning}, lastChunkType) {
+				if slices.Contains([]loop.ChunkType{loop.ChunkTypeMessage, loop.ChunkTypeReasoning}, lastChunk.Type) {
 					PrintNewLine()
 				}
 			}
@@ -202,7 +202,7 @@ func (app *TUIApp) Run(ctx context.Context) {
 				PrintHarnessMessage("other chunk " + string(chunk.Type))
 			}
 
-			lastChunkType = chunk.Type
+			lastChunk = chunk
 
 			if toBreak {
 				break
