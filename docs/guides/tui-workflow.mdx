@@ -5,14 +5,14 @@ description: "Use the bundled terminal interface to probe prompts, tools, and mo
 
 ## What the TUI is for
 
-The TUI is the fastest way to poke at the loop without writing extra code. It is useful for:
+The bundled runner is the fastest way to poke at the loop without writing extra code. In interactive mode it is useful for:
 
 - trying prompts
 - watching streamed output
 - seeing when tool calls happen
 - checking that your saved provider configuration works
 
-It is not a general CLI framework. Today it is a small interactive shell around `loop.RunLoop`.
+It is not a general CLI framework. Today it is a small interactive shell plus a simple one-shot `exec` path around `loop.RunLoop`.
 
 ## Starting a session
 
@@ -23,6 +23,22 @@ go run .
 ```
 
 On first run, the app launches onboarding and writes `~/.config/hrns/config.json`. After that, it prints the active provider and model and waits for input.
+
+## Running a one-shot prompt
+
+Use `exec` when you want one prompt, streamed output, and then process exit:
+
+```bash
+go run . exec -message="Read main.go and explain how hrns boots."
+```
+
+You can override the saved defaults for that run:
+
+```bash
+go run . exec -provider "my-provider" -model my-model -message="List the Go packages in this repo."
+```
+
+`exec` still loads the same saved config and still requires first-run onboarding to have happened already. Unlike the interactive mode, it does not preserve conversation history across runs.
 
 ## Built-in commands
 
@@ -124,7 +140,6 @@ Fetch https://example.com and tell me what came back.
 
 - The system prompt is hardcoded.
 - `/connect` alone does not switch the live client.
-- There is no non-interactive `exec` mode.
 - `/model` expects an argument.
 
 For anything beyond quick experiments, build your own entrypoint on top of the packages instead of stretching the TUI too far.

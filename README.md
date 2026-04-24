@@ -6,7 +6,7 @@ It currently gives you:
 
 - an OpenAI-compatible chat completion client with streaming support
 - a minimal agent loop that can execute tool calls and continue the conversation
-- a small interactive TUI for testing prompts and tools
+- a small TUI for interactive testing plus a one-shot `exec` mode
 - skill discovery from `SKILL.md` files
 - a handful of built-in tools for files, shell commands, and HTTP fetches
 
@@ -60,6 +60,20 @@ Built-in commands:
 
 Note: `/connect` persists a new provider configuration and marks it as `currentProvider` in the config file, but it does not rebuild the active in-memory client. Use `/provider <name>` to switch immediately, or restart the app to pick up the saved current provider on startup.
 
+For a single non-interactive run, use:
+
+```bash
+hrns exec -message="List the Go files in this repository and summarize main.go"
+```
+
+Or from a checkout:
+
+```bash
+go run . exec -message="List the Go files in this repository and summarize main.go"
+```
+
+`exec` reuses the same saved config as the TUI, starts from the system prompt plus your one user message, streams the result to stdout, and exits. You can override the selected provider or model per run with `-provider` and `-model`.
+
 ## Configuration
 
 The bundled binary stores provider settings in:
@@ -106,17 +120,6 @@ go test ./...
 ```
 
 Testing conventions live in [TESTING.md](./TESTING.md).
-
-## Taskfile
-
-If you use [`task`](https://taskfile.dev), the repo includes a small [Taskfile.yml](./Taskfile.yml) with a few common commands:
-
-- `task run`
-- `task install`
-- `task test`
-- `task fmt`
-- `task docs:dev`
-- `task docs:check`
 
 ## Documentation
 

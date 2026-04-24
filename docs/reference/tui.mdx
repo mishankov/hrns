@@ -1,11 +1,11 @@
 ---
 title: "Package reference: tui"
-description: "The interactive terminal UI used by the bundled hrns binary."
+description: "The terminal runner used by the bundled hrns binary."
 ---
 
 ## Purpose
 
-The `tui` package is a thin interactive shell around `loop.Loop` with a small persisted provider config.
+The `tui` package is a thin terminal wrapper around `loop.Loop` with a small persisted provider config. It supports an interactive shell and a one-shot `exec` mode.
 
 ## Main entrypoints
 
@@ -20,20 +20,15 @@ Useful option helpers:
 
 ### `(*TUIApp).Run(ctx)`
 
-Starts the read-eval-print loop:
+Starts the bundled runner:
 
 - loads `~/.config/hrns/config.json`
 - runs onboarding if the config file is missing or empty
 - builds `openai.Client` for the current provider
 - constructs `loop.Loop` from the current client and registered tools
-- prints the banner
-- prints the active provider and model
-- reads a line from stdin
-- handles slash commands
-- appends user messages
-- runs the agent loop
-- prints streamed chunks
-- stores the final message history for the next turn
+- detects interactive mode by default or `exec` mode when the first CLI argument is `exec`
+- in interactive mode, prints the banner, reads stdin, handles slash commands, runs the loop, and stores message history
+- in `exec` mode, parses `-message`, `-provider`, and `-model`, runs one turn, streams chunks, and exits
 
 ## Slash commands
 
@@ -48,6 +43,14 @@ The package currently handles:
 - `/help`
 
 Command parsing is still basic string splitting. Model changes are persisted to the config file. `/provider <name>` also persists `currentProvider` and rebuilds the in-memory client. `/connect` saves a new provider entry and updates `currentProvider`, but it does not switch the live client by itself.
+
+## Exec flags
+
+When the bundled binary is invoked as `hrns exec`, the package accepts:
+
+- `-message` for the one user prompt to run
+- `-provider` to choose a saved provider for that run
+- `-model` to override the model string passed into `RunAgent`
 
 ## Rendering behavior
 
@@ -64,4 +67,4 @@ Assistant response text is printed with the default color settings.
 
 ## Relationship to the rest of hrns
 
-The TUI is the easiest way to try the loop, but it is not the core abstraction. If you want a web UI, service, editor integration, or batch runner, you usually replace `tui` rather than extend it.
+The bundled runner is the easiest way to try the loop, but it is not the core abstraction. If you want a web UI, service, editor integration, or a richer batch runner, you usually replace `tui` rather than extend it.

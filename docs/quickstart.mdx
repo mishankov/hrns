@@ -115,6 +115,12 @@ The bundled app is intentionally opinionated and minimal:
 - Provider configuration is stored in `~/.config/hrns/config.json`.
 - The TUI can store multiple named providers and switch between them with `/provider <name>`.
 - Skills are loaded automatically from the default roots if present.
-- There is no non-interactive CLI mode yet.
+- There is also a one-shot mode for non-interactive runs:
+
+```bash
+hrns exec -message="Read main.go and summarize how hrns boots."
+```
+
+It uses the saved provider config, starts with a fresh conversation, and exits after the run completes. You can override the default provider or model with `-provider` and `-model`.
 
 If you want control over those pieces, the usual path is to embed the packages in your own Go program. See [Embed hrns in your Go code](/guides/embed-in-go).

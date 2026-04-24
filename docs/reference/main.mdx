@@ -43,7 +43,7 @@ The default tool map includes:
 - `web_fetch`
 - `load_skill`
 
-### 3. Start the TUI
+### 3. Start the bundled runner
 
 The package creates:
 
@@ -56,7 +56,7 @@ tui.New(
 
 and then calls `Run(ctx)`.
 
-Provider loading, onboarding, client creation, and loop creation now happen inside `tui.Run(...)`.
+Provider loading, onboarding, client creation, mode detection, and loop creation now happen inside `tui.Run(...)`.
 
 ## When to reuse it
 

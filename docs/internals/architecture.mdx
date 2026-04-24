@@ -12,7 +12,7 @@ description: "Understand how the current hrns runtime is assembled and where eac
 - `loop`: agent loop and tool execution
 - `tools`: bundled tool implementations
 - `skills`: skill discovery and the `load_skill` tool
-- `tui`: interactive terminal UI
+- `tui`: terminal UI and one-shot exec runner
 
 ## Boot sequence
 
@@ -23,7 +23,7 @@ At startup, `main.go` does the following:
 3. creates the `load_skill` tool from the discovered skills
 4. builds a hardcoded system prompt, optionally listing discovered skills
 5. creates `tui.TUIApp` with the built-in tools
-6. starts the TUI
+6. starts the bundled runner
 
 Inside `tui.Run`, startup continues like this:
 
@@ -32,10 +32,11 @@ Inside `tui.Run`, startup continues like this:
 3. pick `currentProvider`
 4. build `openai.Client` from that provider's `url`, `key`, and `skipVerify`
 5. create `loop.Loop` with the current client and tools
+6. choose interactive mode by default, or `exec` mode when the first CLI argument is `exec`
 
 ## Request lifecycle
 
-For each user turn in the TUI:
+For each interactive user turn in the TUI:
 
 1. the TUI appends a `user` message to the current session
 2. it starts `RunLoop` with the current message history and chosen model
@@ -95,6 +96,8 @@ The TUI stores:
 
 The TUI is where onboarding, model persistence, and conversation reset happen today.
 
+In `exec` mode, the same startup path is reused, but the app creates a fresh message list with the system prompt plus one user message from `-message`, runs the loop once, and exits.
+
 ## Current design limits
 
 The architecture is small on purpose, but that comes with hard edges:
@@ -103,6 +106,6 @@ The architecture is small on purpose, but that comes with hard edges:
 - tool schemas are flat and fully required
 - tool results are plain strings
 - `/connect` updates saved config, but only `/provider <name>` rebuilds the live client
-- the bundled entrypoint is interactive only
+- `exec` is single-shot only and does not persist conversation state
 
 Those limits are acceptable for experiments and for library-style embedding, where you own the outer application.

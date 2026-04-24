@@ -7,7 +7,7 @@ description: "A minimal Go harness for experimenting with tool-using AI agents a
 
 - a streaming chat client for OpenAI-compatible `/chat/completions`
 - an agent loop that can execute tool calls and continue the conversation
-- a tiny interactive TUI for manual testing
+- a tiny TUI for manual testing plus a one-shot `exec` mode
 - a lightweight skill loader that exposes prompt files as a tool
 
 If you want to play with agents, inspect the moving parts, and then reuse the same pieces inside your own Go code, this repo is aimed at exactly that.
@@ -17,6 +17,7 @@ If you want to play with agents, inspect the moving parts, and then reuse the sa
 The current repo behavior is intentionally narrow:
 
 - The binary starts an interactive TUI.
+- The same binary also supports `hrns exec -message="..."` for single-run execution.
 - The TUI creates a persisted provider config on first run.
 - The TUI stores multiple named providers and builds an OpenAI-compatible client from the saved current provider.
 - The default system prompt is hardcoded in `main.go`.
