@@ -6,6 +6,7 @@ tasks:
     cmds:
       - go test -cover ./...
 
+  # Docs
   docs:dev:
     desc: Run the Mintlify docs dev server
     dir: docs
@@ -17,3 +18,14 @@ tasks:
     dir: docs
     cmds:
       - mint broken-links
+
+  # Automations with hrns
+  hrns:commit:
+    desc: Commit and push using hrns
+    cmds:
+      - go run . exec -message="Commit and push uncommited changes. Do not ask, just choose most futting one" -provider="OpenCode Go" -model=kimi-k2.6
+
+  hrns:lint:
+    desc: Run linter and analyze output
+    cmds:
+      - go run . exec -message="Run `golangci-lint run` command and decide what lint errors are worth to make. Only analyze, do not fix anything" -provider="OpenCode Go" -model=kimi-k2.6
