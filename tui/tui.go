@@ -183,7 +183,7 @@ func (app *TUIApp) Run(ctx context.Context) {
 
 			messages = append(messages, openai.UserMessage(messageText))
 
-			RunAgent(ctx, agnt, messages, mode)
+			RunAgent(ctx, agnt, messages, model)
 
 			messages = agnt.Messages()
 		}
