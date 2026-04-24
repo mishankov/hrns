@@ -23,7 +23,7 @@ tasks:
   hrns:commit:
     desc: Commit and push using hrns
     cmds:
-      - go run . exec -message="Commit and push uncommited changes. Do not ask, just choose most futting one" -provider="OpenCode Go" -model=kimi-k2.6
+      - go run . exec -message="Commit and push uncommited changes. Do not ask, just choose most fitting one" -provider="OpenCode Go" -model=kimi-k2.6
 
   hrns:lint:
     desc: Run linter and analyze output
