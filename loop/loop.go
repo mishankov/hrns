@@ -97,6 +97,8 @@ func (a *Loop) RunLoop(ctx context.Context, messages []openai.Message, model str
 				// Process reasoning chunk
 				if reasoning, _ := delta.Extra["reasoning"].(string); reasoning != "" {
 					a.sendChunk(NewChunkReasoning(reasoning))
+				} else if reasoning, _ := delta.Extra["reasoning_content"].(string); reasoning != "" {
+					a.sendChunk(NewChunkReasoning(reasoning))
 				}
 			}
 		}
