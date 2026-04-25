@@ -184,3 +184,113 @@ func TestChatCompletionAccumulatorPreservesStructuredMessageContent(t *testing.T
 		t.Fatalf("choices[0].Message.Content[0][text] = %#v, want %q", part["text"], "structured")
 	}
 }
+
+func TestChatCompletionAccumulatorAppendsReasoningContentDeltas(t *testing.T) {
+	t.Parallel()
+
+	var acc openai.ChatCompletionAccumulator
+
+	acc.AddChunk(openai.ChatCompletionResponse{
+		Choices: []openai.ChatCompletionChoice{
+			{
+				Index: 0,
+				Delta: &openai.Message{
+					Role:  "assistant",
+					Extra: map[string]any{"reasoning_content": "think "},
+				},
+			},
+		},
+	})
+	acc.AddChunk(openai.ChatCompletionResponse{
+		Choices: []openai.ChatCompletionChoice{
+			{
+				Index: 0,
+				Delta: &openai.Message{
+					Extra: map[string]any{"reasoning_content": nil},
+				},
+			},
+		},
+	})
+	acc.AddChunk(openai.ChatCompletionResponse{
+		Choices: []openai.ChatCompletionChoice{
+			{
+				Index: 0,
+				Delta: &openai.Message{
+					Extra: map[string]any{"reasoning_content": "again"},
+				},
+			},
+		},
+	})
+	acc.AddChunk(openai.ChatCompletionResponse{
+		Choices: []openai.ChatCompletionChoice{
+			{
+				Index: 0,
+				Delta: &openai.Message{
+					Content: "done",
+				},
+			},
+		},
+	})
+
+	choices := acc.Choices()
+	if len(choices) != 1 {
+		t.Fatalf("len(Choices()) = %d, want 1", len(choices))
+	}
+	if choices[0].Message.Extra["reasoning_content"] != "think again" {
+		t.Fatalf("reasoning_content = %#v, want %q", choices[0].Message.Extra["reasoning_content"], "think again")
+	}
+	if openai.MessageText(choices[0].Message.Content) != "done" {
+		t.Fatalf("content = %#v, want done", choices[0].Message.Content)
+	}
+}
+
+func TestChatCompletionAccumulatorAliasesReasoningForToolCallMessages(t *testing.T) {
+	t.Parallel()
+
+	var acc openai.ChatCompletionAccumulator
+
+	acc.AddChunk(openai.ChatCompletionResponse{
+		Choices: []openai.ChatCompletionChoice{
+			{
+				Index: 0,
+				Delta: &openai.Message{
+					Role:  "assistant",
+					Extra: map[string]any{"reasoning": "need a tool"},
+				},
+			},
+		},
+	})
+	acc.AddChunk(openai.ChatCompletionResponse{
+		Choices: []openai.ChatCompletionChoice{
+			{
+				Index: 0,
+				Delta: &openai.Message{
+					ToolCalls: []openai.ToolCall{
+						{
+							ID:   "call_1",
+							Type: "function",
+							Function: openai.ToolCallFunction{
+								Name:      "lookup",
+								Arguments: "{}",
+							},
+						},
+					},
+				},
+			},
+		},
+	})
+
+	choices := acc.Choices()
+	if len(choices) != 1 {
+		t.Fatalf("len(Choices()) = %d, want 1", len(choices))
+	}
+	if choices[0].Message.Extra["reasoning"] != "need a tool" {
+		t.Fatalf("reasoning = %#v, want %q", choices[0].Message.Extra["reasoning"], "need a tool")
+	}
+	if choices[0].Message.Extra["reasoning_content"] != "need a tool" {
+		t.Fatalf("reasoning_content = %#v, want %q", choices[0].Message.Extra["reasoning_content"], "need a tool")
+	}
+	if choices[0].Message.Content == nil || openai.MessageText(choices[0].Message.Content) != "" {
+		t.Fatalf("content = %#v, want empty string", choices[0].Message.Content)
+	}
+}

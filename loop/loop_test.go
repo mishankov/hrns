@@ -213,6 +213,75 @@ func TestRunLoopExecutesToolCallsAndContinuesConversation(t *testing.T) {
 	}
 }
 
+func TestRunLoopPassesBackReasoningContentForToolContinuation(t *testing.T) {
+	t.Parallel()
+
+	tool := &spyTool{
+		description: "Echoes text",
+		arguments:   []loop.ToolArgument{{Name: "value", Type: "string"}},
+		result:      "tool-result",
+	}
+	streamer := &scriptedStreamer{
+		scripts: []streamScript{
+			{
+				events: []openai.StreamEvent{
+					streamEvent(0, openai.Message{
+						Role:  "assistant",
+						Extra: map[string]any{"reasoning_content": "need "},
+					}),
+					streamEvent(0, openai.Message{
+						Extra: map[string]any{"reasoning_content": "tool"},
+						ToolCalls: []openai.ToolCall{
+							{
+								ID:   "call_1",
+								Type: "function",
+								Function: openai.ToolCallFunction{
+									Name:      "echo",
+									Arguments: `{"value":"hello"}`,
+								},
+							},
+						},
+					}),
+				},
+			},
+			{
+				events: []openai.StreamEvent{
+					streamEvent(0, openai.Message{Role: "assistant", Content: "final answer"}),
+				},
+			},
+		},
+	}
+
+	agent := loop.New(streamer, map[string]loop.Tool{"echo": tool})
+
+	chunks := runLoop(t, agent, []openai.Message{openai.UserMessage("Hi")}, "test-model")
+
+	if got := chunkTypes(chunks); !reflect.DeepEqual(got, []loop.ChunkType{
+		loop.ChunkTypeReasoning,
+		loop.ChunkTypeReasoning,
+		loop.ChunkTypeToolCallStart,
+		loop.ChunkTypeToolCallResult,
+		loop.ChunkTypeMessage,
+		loop.ChunkTypeEnd,
+	}) {
+		t.Fatalf("chunk types = %#v", got)
+	}
+	if len(streamer.calls) != 2 {
+		t.Fatalf("stream calls = %d, want 2", len(streamer.calls))
+	}
+
+	assistantMessage := streamer.calls[1].Messages[1]
+	if assistantMessage.Role != "assistant" || len(assistantMessage.ToolCalls) != 1 {
+		t.Fatalf("second request assistant message = %#v", assistantMessage)
+	}
+	if assistantMessage.Content == nil || openai.MessageText(assistantMessage.Content) != "" {
+		t.Fatalf("second request assistant content = %#v, want empty string", assistantMessage.Content)
+	}
+	if assistantMessage.Extra["reasoning_content"] != "need tool" {
+		t.Fatalf("second request reasoning_content = %#v, want %q", assistantMessage.Extra["reasoning_content"], "need tool")
+	}
+}
+
 func TestRunLoopReportsUnknownToolErrors(t *testing.T) {
 	t.Parallel()
 

@@ -75,7 +75,7 @@ func mergeMessage(dst *Message, delta Message) {
 			dst.Extra = map[string]any{}
 		}
 		for k, v := range delta.Extra {
-			dst.Extra[k] = v
+			mergeMessageExtra(dst.Extra, k, v)
 		}
 	}
 
@@ -85,6 +85,34 @@ func mergeMessage(dst *Message, delta Message) {
 		}
 		mergeToolCall(&dst.ToolCalls[i], toolCallDelta)
 	}
+
+	if len(dst.ToolCalls) > 0 && dst.Content == nil {
+		dst.Content = ""
+	}
+	if len(dst.ToolCalls) > 0 && dst.Extra != nil {
+		if _, hasReasoningContent := dst.Extra["reasoning_content"]; !hasReasoningContent {
+			if reasoning, _ := dst.Extra["reasoning"].(string); reasoning != "" {
+				dst.Extra["reasoning_content"] = reasoning
+			}
+		}
+	}
+}
+
+func mergeMessageExtra(dst map[string]any, key string, value any) {
+	switch key {
+	case "reasoning", "reasoning_content":
+		if value == nil {
+			return
+		}
+		if incoming, ok := value.(string); ok {
+			if existing, ok := dst[key].(string); ok {
+				dst[key] = existing + incoming
+				return
+			}
+		}
+	}
+
+	dst[key] = value
 }
 
 func mergeToolCall(dst *ToolCall, delta ToolCall) {
