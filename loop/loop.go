@@ -132,7 +132,7 @@ func (a *Loop) RunLoop(ctx context.Context, messages []openai.Message, model str
 				); err != nil {
 					messages = append(
 						messages,
-						openai.ToolMessage("ERROR: tools calling error: "+err.Error(), toolCall.ID),
+						openai.ToolMessage("ERROR: tool call parameters are invalid json: "+err.Error()+". Do not try to call tool with multiple sets of parameters", toolCall.ID),
 					)
 
 					a.sendChunk(NewChunkToolCallError(toolCall.Function.Name, "tools calling error: "+err.Error()))
