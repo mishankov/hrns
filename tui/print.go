@@ -16,6 +16,8 @@ var harnessMessageColor = color.New(color.FgBlue)
 var toolNameColor = color.New(color.FgRed)
 var toolArgsColor = color.New(color.FgHiYellow)
 
+var agentColor = color.New(color.FgHiYellow)
+
 func PrintUserInputPrompt() {
 	PrintNewLine()
 	color.RGB(100, 100, 100).Print("> ")
@@ -53,6 +55,10 @@ func PrintWelcomeMessage(provider, model string) {
 	PrintHarnessMessage("HRNS loop. dev")
 	PrintHarnessMessage("Provider: " + provider)
 	PrintHarnessMessage("Model: " + model)
+}
+
+func PrintAgent(agent string) {
+	agentColor.Print("Agent: " + agent)
 }
 
 func GetUserInput() string {

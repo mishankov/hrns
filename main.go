@@ -4,6 +4,8 @@ import (
 	"context"
 	"log"
 
+	"github.com/mishankov/hrns/agent"
+	"github.com/mishankov/hrns/agents"
 	"github.com/mishankov/hrns/loop"
 	"github.com/mishankov/hrns/skills"
 	"github.com/mishankov/hrns/tools"
@@ -30,7 +32,6 @@ func main() {
 	}
 
 	tuiapp := tui.New(
-		systemPrompt,
 		tui.WithTools(map[string]loop.Tool{
 			"read_file":   tools.ReadFileTool,
 			"list_files":  tools.ListFilesTool,
@@ -39,6 +40,7 @@ func main() {
 			"web_fetch":   tools.WebFetchTool,
 			"load_skill":  loadSkillTool,
 		}),
+		tui.WithAgents([]agent.Agent{agents.Builder, agents.Explorer, agents.Planner, agents.Pirate}),
 	)
 	tuiapp.Run(ctx)
 }

@@ -11,6 +11,7 @@ import (
 	"slices"
 	"strings"
 
+	"github.com/mishankov/hrns/agent"
 	"github.com/mishankov/hrns/loop"
 	"github.com/mishankov/hrns/openai"
 )
@@ -18,6 +19,7 @@ import (
 type TUIApp struct {
 	systemPrompt string
 	tools        map[string]loop.Tool
+	agents       map[string]agent.Agent
 }
 
 type Option func(*TUIApp)
@@ -34,10 +36,30 @@ func WithTools(tools map[string]loop.Tool) Option {
 	}
 }
 
-func New(systemPrompt string, opts ...Option) *TUIApp {
+func WithAgent(agent agent.Agent) Option {
+	return func(app *TUIApp) {
+		app.agents[agent.Name] = agent
+	}
+}
+
+func WithAgents(agents []agent.Agent) Option {
+	return func(app *TUIApp) {
+		for _, agent := range agents {
+			app.agents[agent.Name] = agent
+		}
+	}
+}
+
+func WithSystemPrompt(systemPrompt string) Option {
+	return func(app *TUIApp) {
+		app.systemPrompt = systemPrompt
+	}
+}
+
+func New(opts ...Option) *TUIApp {
 	app := &TUIApp{
-		systemPrompt: systemPrompt,
-		tools:        map[string]loop.Tool{},
+		tools:  map[string]loop.Tool{},
+		agents: map[string]agent.Agent{},
 	}
 
 	for _, opt := range opts {
@@ -63,8 +85,27 @@ func (app *TUIApp) Run(ctx context.Context) {
 		return
 	}
 
+	systemPrompt := app.systemPrompt
+	if config.CurrentAgent != "" {
+		if agent, ok := app.agents[config.CurrentAgent]; ok {
+			systemPrompt = agent.Prompt
+		}
+	} else {
+		for name, agent := range app.agents {
+			config.CurrentAgent = name
+			err := config.Save()
+			if err != nil {
+				PrintError("failed to save config: " + err.Error())
+				return
+			}
+
+			systemPrompt = agent.Prompt
+			break
+		}
+	}
+
 	// Initializing messages with system prompt
-	messages := []openai.Message{openai.SystemMessage(app.systemPrompt)}
+	messages := []openai.Message{openai.SystemMessage(systemPrompt)}
 
 	// Setting up default provider and model
 	currentProvider := config.Providers[config.CurrentProvider]
@@ -91,6 +132,7 @@ func (app *TUIApp) Run(ctx context.Context) {
 		PrintWelcomeMessage(config.CurrentProvider, model)
 
 		for {
+			PrintAgent(config.CurrentAgent)
 			messageText := GetUserInput()
 
 			if strings.HasPrefix(messageText, "/") {

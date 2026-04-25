@@ -16,6 +16,7 @@ type ProviderConfig struct {
 type Config struct {
 	Providers       map[string]ProviderConfig `json:"providers"`
 	CurrentProvider string                    `json:"currentProvider"`
+	CurrentAgent    string                    `json:"currentAgent"`
 }
 
 func LoadConfig() (*Config, error) {
