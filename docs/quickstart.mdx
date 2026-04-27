@@ -88,12 +88,15 @@ To change the saved model for the current provider:
 
 Other built-in commands:
 
-- `/models` lists models from the current provider's `/models` endpoint
-- `/provider <name>` switches the active provider for this session and saves it as current
 - `/new` resets the conversation history
-- `/help` prints the command list
+- `/models` lists models from the current provider's `/models` endpoint
+- `/model <model>` updates the current provider's saved default model
 - `/providers` lists saved providers
+- `/provider <name>` switches the active provider for this session and saves it as current
+- `/agents` lists registered agents
+- `/agent <agent>` switches the active agent prompt and saves it as current
 - `/connect` adds another provider to the config file
+- `/help` prints the command list
 
 `/connect` saves a provider entry and updates `currentProvider` in the config file, but it does not rebuild the active client for the same session. If you want to start using the new provider right away, run `/provider <name>` after connecting it.
 
@@ -111,16 +114,16 @@ When the model decides to call tools, the TUI prints tool-call notices inline. A
 
 The bundled app is intentionally opinionated and minimal:
 
-- The system prompt is hardcoded in `main.go`.
+- The TUI supports registered agents and can save the current agent prompt when agents are provided.
 - Provider configuration is stored in `~/.config/hrns/config.json`.
 - The TUI can store multiple named providers and switch between them with `/provider <name>`.
-- Skills are loaded automatically from the default roots if present.
+- Skills are loaded automatically from the default roots if present and appended to the active system prompt as discoverable context.
 - There is also a one-shot mode for non-interactive runs:
 
 ```bash
 hrns exec -message="Read main.go and summarize how hrns boots."
 ```
 
-It uses the saved provider config, starts with a fresh conversation, and exits after the run completes. You can override the default provider or model with `-provider` and `-model`.
+It uses the saved provider and agent config, starts with a fresh conversation, and exits after the run completes. You can override the default provider, model, or agent with `-provider`, `-model`, and `-agent`. If you pass `-provider` without `-model`, the run uses that provider's saved default model.
 
 If you want control over those pieces, the usual path is to embed the packages in your own Go program. See [Embed hrns in your Go code](/guides/embed-in-go).

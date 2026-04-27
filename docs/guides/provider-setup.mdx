@@ -104,6 +104,8 @@ To switch the active session to a saved provider:
 
 `/connect` saves the new provider and marks it as `currentProvider` in the config file, but it does not rebuild the in-memory client by itself. Use `/provider <name>` to switch immediately, or restart the TUI to start with the saved current provider.
 
+In `hrns exec`, `-provider <name>` uses that provider's saved default model unless you also pass `-model`.
+
 ## When embedding instead of using the TUI
 
 If you use the packages directly, you do not need the TUI config file at all. You can build the client explicitly:

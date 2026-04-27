@@ -9,14 +9,18 @@ The `tui` package is a thin terminal wrapper around `loop.Loop` with a small per
 
 ## Main entrypoints
 
-### `tui.New(systemPrompt string, opts ...Option)`
+### `tui.New(opts ...Option)`
 
-Constructs a `TUIApp` with a system prompt and registered tools.
+Constructs a `TUIApp` with registered tools, agents, and built-in slash commands.
 
 Useful option helpers:
 
 - `tui.WithTool(name, tool)`
 - `tui.WithTools(map[string]loop.Tool)`
+- `tui.WithAgent(agent.Agent)`
+- `tui.WithAgents([]agent.Agent)`
+- `tui.WithSkills([]skills.Skill)`
+- `tui.WithSystemPrompt(string)`
 
 ### `(*TUIApp).Run(ctx)`
 
@@ -24,25 +28,29 @@ Starts the bundled runner:
 
 - loads `~/.config/hrns/config.json`
 - runs onboarding if the config file is missing or empty
+- selects the saved current agent, repairs a stale saved agent, or saves one registered agent as current
+- composes the system message from the selected agent or base prompt plus discovered skill metadata
 - builds `openai.Client` for the current provider
 - constructs `loop.Loop` from the current client and registered tools
 - detects interactive mode by default or `exec` mode when the first CLI argument is `exec`
 - in interactive mode, prints the banner, reads stdin, handles slash commands, runs the loop, and stores message history
-- in `exec` mode, parses `-message`, `-provider`, and `-model`, runs one turn, streams chunks, and exits
+- in `exec` mode, parses `-message`, `-provider`, `-model`, and `-agent`, runs one turn, streams chunks, and exits
 
 ## Slash commands
 
 The package currently handles:
 
+- `/new`
 - `/models`
 - `/model <model>`
-- `/provider <name>`
-- `/new`
 - `/providers`
+- `/provider <name>`
+- `/agents`
+- `/agent <agent>`
 - `/connect`
 - `/help`
 
-Command parsing is still basic string splitting. Model changes are persisted to the config file. `/provider <name>` also persists `currentProvider` and rebuilds the in-memory client. `/connect` saves a new provider entry and updates `currentProvider`, but it does not switch the live client by itself.
+Commands are registered with usage text, descriptions, and handler methods; `/help` is rendered from that registry. Model changes are persisted to the config file. `/provider <name>` also persists `currentProvider` and rebuilds the in-memory client. `/connect` saves a new provider entry and updates `currentProvider`, but it does not switch the live client by itself. `/agent <agent>` persists `currentAgent` and resets the active system message to that agent's prompt.
 
 ## Exec flags
 
@@ -50,7 +58,10 @@ When the bundled binary is invoked as `hrns exec`, the package accepts:
 
 - `-message` for the one user prompt to run
 - `-provider` to choose a saved provider for that run
-- `-model` to override the model string passed into `RunAgent`
+- `-model` to override the model used for the one-shot run
+- `-agent` to choose a registered agent prompt for that run
+
+When `-provider` is supplied without `-model`, `exec` uses the selected provider's saved default model.
 
 ## Rendering behavior
 

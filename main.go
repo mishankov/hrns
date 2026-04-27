@@ -21,16 +21,6 @@ func main() {
 	}
 	loadSkillTool := skills.NewLoadSkillTool(loadedSkills)
 
-	systemPrompt := "You are a coding assistant that talks like a pirate."
-	if len(loadedSkills) > 0 {
-		systemPrompt += "\n\nYou have access to the following skills:"
-		for _, skill := range loadedSkills {
-			systemPrompt += "\n- " + skill.Name + ": " + skill.Description
-		}
-
-		systemPrompt += "\n You can load them with the `load_skill` tool."
-	}
-
 	builtInAgents := []agent.Agent{agents.Builder, agents.Explorer, agents.Planner, agents.Pirate}
 	fsAgents, err := agent.LoadAllAgents([]string{agent.DefaultLocalRootPath, agent.DefaultGlobalRootPath})
 	if err != nil {
@@ -49,6 +39,7 @@ func main() {
 			"load_skill":  loadSkillTool,
 		}),
 		tui.WithAgents(agents),
+		tui.WithSkills(loadedSkills),
 	)
 	tuiapp.Run(ctx)
 }

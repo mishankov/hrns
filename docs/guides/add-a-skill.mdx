@@ -50,16 +50,17 @@ description: Summarize the repository structure before making changes
 When asked to make changes, first inspect the repository structure and identify the main entrypoints.
 ```
 
-The `name` and `description` fields are what `LoadAllSkills` keeps in memory and what the default system prompt advertises.
+The `name` and `description` fields are what `LoadAllSkills` keeps in memory.
 
 ## How the bundled app uses skills
 
 At startup:
 
 1. `main.go` loads all discovered skills.
-2. It appends their names and descriptions to the hardcoded system prompt.
-3. It registers the `load_skill` tool.
-4. If the model asks to load one by name, the tool returns the entire `SKILL.md` file contents.
+2. It creates the `load_skill` tool from the loaded skill metadata.
+3. It passes the skill metadata to the bundled TUI.
+4. The TUI appends the skill names, descriptions, and `load_skill` hint to the runtime system message.
+5. If the model asks to load one by name, the tool returns the entire `SKILL.md` file contents.
 
 ## Important behavior details
 

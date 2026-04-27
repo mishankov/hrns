@@ -50,13 +50,15 @@ After onboarding, later runs reuse the saved config and print the active provide
 
 Built-in commands:
 
+- `/new` starts a fresh conversation
 - `/models` lists models exposed by the current provider's `/models` endpoint
 - `/model <model>` updates the current provider's saved default model
-- `/new` starts a fresh conversation
-- `/help` shows the command list
 - `/providers` lists saved providers
 - `/provider <name>` switches the active provider, rebuilds the client, and saves it as current
+- `/agents` lists registered agents
+- `/agent <agent>` switches the active agent prompt and saves it as current
 - `/connect` adds another provider to the saved config
+- `/help` shows the command list
 
 Note: `/connect` persists a new provider configuration and marks it as `currentProvider` in the config file, but it does not rebuild the active in-memory client. Use `/provider <name>` to switch immediately, or restart the app to pick up the saved current provider on startup.
 
@@ -72,7 +74,7 @@ Or from a checkout:
 go run . exec -message="List the Go files in this repository and summarize main.go"
 ```
 
-`exec` reuses the same saved config as the TUI, starts from the system prompt plus your one user message, streams the result to stdout, and exits. You can override the selected provider or model per run with `-provider` and `-model`.
+`exec` reuses the same saved config as the TUI, starts from the active system prompt plus your one user message, streams the result to stdout, and exits. You can override the selected provider, model, or registered agent per run with `-provider`, `-model`, and `-agent`. If you pass `-provider` without `-model`, the run uses that provider's saved default model.
 
 ## Configuration
 
@@ -86,11 +88,14 @@ The config file contains:
 
 - named providers with `url`, `key`, `model`, and `skipVerify`
 - `currentProvider` to choose the default provider on startup
+- `currentAgent` to choose the default agent prompt on startup
 
 The bundled app also loads skills from:
 
 - `~/.agents/skills`
 - `./.agents/skills`
+
+Discovered skill names and descriptions are appended to the active system prompt so the model knows it can call `load_skill` for the full skill body.
 
 ## Built-in tools
 

@@ -38,7 +38,7 @@ You can override the saved defaults for that run:
 go run . exec -provider "my-provider" -model my-model -message="List the Go packages in this repo."
 ```
 
-`exec` still loads the same saved config and still requires first-run onboarding to have happened already. Unlike the interactive mode, it does not preserve conversation history across runs.
+`exec` still loads the same saved config and still requires first-run onboarding to have happened already. Unlike the interactive mode, it does not preserve conversation history across runs. You can also pass `-agent`; if you pass `-provider` without `-model`, the selected provider's saved default model is used.
 
 ## Built-in commands
 
@@ -66,14 +66,6 @@ This sends `GET /models` to the current provider and prints the returned model I
 
 This clears the accumulated conversation history.
 
-### Show help
-
-```text
-/help
-```
-
-This prints the available commands.
-
 ### List saved providers
 
 ```text
@@ -90,6 +82,22 @@ This prints the names of providers stored in the config file.
 
 This saves `currentProvider`, rebuilds the OpenAI-compatible client, and keeps the current conversation history in memory.
 
+### List agents
+
+```text
+/agents
+```
+
+This prints the registered agents.
+
+### Switch agent
+
+```text
+/agent <agent>
+```
+
+This saves `currentAgent` and updates the active system message to that agent's prompt.
+
 ### Add a provider
 
 ```text
@@ -97,6 +105,14 @@ This saves `currentProvider`, rebuilds the OpenAI-compatible client, and keeps t
 ```
 
 This runs the same prompt sequence as first-run onboarding and saves another provider entry.
+
+### Show help
+
+```text
+/help
+```
+
+This prints the registered command list.
 
 ## What gets streamed back
 
@@ -118,6 +134,7 @@ Provider state is slightly different:
 - the provider client is built once when the TUI starts
 - `/model` persists a new model value for the current provider
 - `/provider <name>` rebuilds the client and updates the active model for the session
+- `/agent <agent>` persists the selected agent and updates the active system message
 - `/connect` saves another provider and updates `currentProvider` in the config file, but the active session keeps using the existing client until you run `/provider <name>` or restart
 
 ## Good prompts for exploration
@@ -138,8 +155,8 @@ Fetch https://example.com and tell me what came back.
 
 ## Known limits
 
-- The system prompt is hardcoded.
 - `/connect` alone does not switch the live client.
 - `/model` expects an argument.
+- `/agent` expects an argument.
 
 For anything beyond quick experiments, build your own entrypoint on top of the packages instead of stretching the TUI too far.

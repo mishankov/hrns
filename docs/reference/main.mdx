@@ -9,7 +9,7 @@ The `main` package is not a reusable library surface. Its job is to assemble the
 
 ## Current startup behavior
 
-`main.go` performs three concrete tasks:
+`main.go` performs four concrete tasks:
 
 ### 1. Load skills
 
@@ -24,15 +24,14 @@ skills.LoadAllSkills([]string{
 
 Then it creates `load_skill` with `skills.NewLoadSkillTool(...)`.
 
-### 2. Build the default prompt and tool map
+### 2. Load agents
 
-The system prompt starts as:
+The bundled app registers built-in agents from the `agents` package and also loads file-system agents from:
 
-```text
-You are a coding assistant that talks like a pirate.
-```
+- `./.hrns/agents`
+- `~/.hrns/agents`
 
-If skills were found, the prompt is extended with their names, descriptions, and a note that they can be loaded with `load_skill`.
+### 3. Build the default tool map
 
 The default tool map includes:
 
@@ -43,18 +42,19 @@ The default tool map includes:
 - `web_fetch`
 - `load_skill`
 
-### 3. Start the bundled runner
+### 4. Start the bundled runner
 
 The package creates:
 
 ```go
 tui.New(
-    systemPrompt,
     tui.WithTools(...),
+    tui.WithAgents(...),
+    tui.WithSkills(...),
 )
 ```
 
-and then calls `Run(ctx)`.
+and then calls `Run(ctx)`. The TUI composes the runtime system message from the selected agent or base prompt plus the passed skill metadata.
 
 Provider loading, onboarding, client creation, mode detection, and loop creation now happen inside `tui.Run(...)`.
 
