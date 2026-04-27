@@ -139,6 +139,27 @@ func (app *TUIApp) Run(ctx context.Context) {
 				commandSplited := strings.Split(messageText, " ")
 
 				switch commandSplited[0] {
+				case "/agents":
+					for name, agent := range app.agents {
+						PrintHarnessMessage(name + " - " + agent.Description)
+					}
+				case "/agent":
+					previousAgent := config.CurrentAgent
+					agentName := strings.TrimSpace(commandSplited[1])
+					if _, ok := app.agents[agentName]; !ok {
+						PrintError("agent not found: " + agentName)
+						break
+					}
+					config.CurrentAgent = agentName
+					err := config.Save()
+					if err != nil {
+						PrintError("failed to save config: " + err.Error())
+						config.CurrentAgent = previousAgent
+						break
+					}
+
+					PrintHarnessMessage("Agent changed to " + agentName)
+					messages[0] = openai.SystemMessage(app.agents[agentName].Prompt)
 				case "/model":
 					previousModel := model
 					model = strings.TrimSpace(commandSplited[1])
@@ -213,6 +234,8 @@ func (app *TUIApp) Run(ctx context.Context) {
 					PrintHarnessMessage("/model <model> - change model")
 					PrintHarnessMessage("/providers     - list connected providers")
 					PrintHarnessMessage("/provider      - change provider")
+					PrintHarnessMessage("/agents        - list available agents")
+					PrintHarnessMessage("/agent <agent> - change agent")
 					PrintHarnessMessage("/connect       - connect a new provider")
 					PrintHarnessMessage("/help          - show this help")
 

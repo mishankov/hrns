@@ -31,6 +31,14 @@ func main() {
 		systemPrompt += "\n You can load them with the `load_skill` tool."
 	}
 
+	builtInAgents := []agent.Agent{agents.Builder, agents.Explorer, agents.Planner, agents.Pirate}
+	fsAgents, err := agent.LoadAllAgents([]string{agent.DefaultLocalRootPath, agent.DefaultGlobalRootPath})
+	if err != nil {
+		log.Fatalf("failed to load agents from fs: %v", err)
+	}
+
+	agents := append(builtInAgents, fsAgents...)
+
 	tuiapp := tui.New(
 		tui.WithTools(map[string]loop.Tool{
 			"read_file":   tools.ReadFileTool,
@@ -40,7 +48,7 @@ func main() {
 			"web_fetch":   tools.WebFetchTool,
 			"load_skill":  loadSkillTool,
 		}),
-		tui.WithAgents([]agent.Agent{agents.Builder, agents.Explorer, agents.Planner, agents.Pirate}),
+		tui.WithAgents(agents),
 	)
 	tuiapp.Run(ctx)
 }
