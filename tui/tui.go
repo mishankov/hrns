@@ -257,6 +257,8 @@ func (app *TUIApp) Run(ctx context.Context) {
 		flagModel := execCmd.String("model", model, "Model")
 		flagProvider := execCmd.String("provider", config.CurrentProvider, "Provider")
 		flagMessage := execCmd.String("message", "", "Message")
+		flagAgent := execCmd.String("agent", config.CurrentAgent, "Agent")
+
 		err := execCmd.Parse(os.Args[2:])
 		if err != nil {
 			PrintError(err.Error())
@@ -272,6 +274,7 @@ func (app *TUIApp) Run(ctx context.Context) {
 
 		PrintWelcomeMessage(*flagProvider, *flagModel)
 
+		messages[0] = openai.SystemMessage(app.agents[*flagAgent].Prompt)
 		messages = append(messages, openai.UserMessage(*flagMessage))
 
 		RunAgent(ctx, agnt, messages, *flagModel)

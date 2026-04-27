@@ -23,9 +23,9 @@ tasks:
   hrns:commit:
     desc: Commit and push using hrns
     cmds:
-      - go run . exec -message="Create commit message for uncommited changes. Make commit with this message and push it to remote. Do not ask about commit message, just choose most fitting one" -provider="OpenCode Go" -model=kimi-k2.6
+      - go run . exec -message="Create commit message for uncommited changes. Make commit with this message and push it to remote. Do not ask about commit message, just choose most fitting one" -provider="OpenCode Go" -model=kimi-k2.6 -agent=Builder
 
   hrns:lint:
     desc: Run linter and analyze output
     cmds:
-      - go run . exec -message="Run `golangci-lint run` command and decide what lint errors are worth to make. Only analyze, do not fix anything" -provider="OpenCode Go" -model=kimi-k2.6
+      - go run . exec -message="Run `golangci-lint run` command and decide what lint errors are worth to make. Only analyze, do not fix anything" -provider="OpenCode Go" -model=kimi-k2.6 -agent=Builder
