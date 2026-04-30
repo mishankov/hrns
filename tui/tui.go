@@ -286,7 +286,7 @@ func (app *TUIApp) buildSkillsPrompt() string {
 func (app *TUIApp) initLLM() {
 	currentProvider := app.config.Providers[app.config.CurrentProvider]
 	app.model = currentProvider.Model
-	app.rebuildAgenticLoop(currentProvider)
+	app.rebuildAgenticLoop(currentProvider, app.config.CurrentAgent)
 }
 
 func detectMode(args []string) string {
@@ -425,7 +425,7 @@ func (app *TUIApp) handleProviderCommand(ctx context.Context, args string) error
 	}
 
 	app.model = provider.Model
-	app.rebuildAgenticLoop(provider)
+	app.rebuildAgenticLoop(provider, app.config.CurrentAgent)
 
 	PrintHarnessMessage("Provider changed to " + app.config.CurrentProvider)
 	PrintHarnessMessage("Model changed to " + app.model)
@@ -458,6 +458,7 @@ func (app *TUIApp) handleAgentCommand(ctx context.Context, args string) error {
 	}
 
 	app.messages[0] = openai.SystemMessage(app.buildSystemPrompt())
+	app.rebuildAgenticLoop(app.config.Providers[app.config.CurrentProvider], app.config.CurrentAgent)
 
 	PrintHarnessMessage("Agent changed to " + args)
 
@@ -545,7 +546,7 @@ func (app *TUIApp) runExec(ctx context.Context, args []string) {
 		*flagAgent = ""
 	}
 
-	app.rebuildAgenticLoop(provider)
+	app.rebuildAgenticLoop(provider, *flagAgent)
 	app.model = provider.Model
 	if modelProvided {
 		app.model = *flagModel
@@ -573,12 +574,28 @@ func (app *TUIApp) createLLMClient(provider ProviderConfig) *openai.Client {
 	)
 }
 
-func (app *TUIApp) rebuildAgenticLoop(provider ProviderConfig) {
+func (app *TUIApp) rebuildAgenticLoop(provider ProviderConfig, agentName string) {
 	app.client = app.createLLMClient(provider)
 	app.agenticLoop = loop.New(
 		app.client,
-		app.tools,
+		app.toolsForAgent(agentName),
 	)
+}
+
+func (app *TUIApp) toolsForAgent(agentName string) map[string]loop.Tool {
+	selectedAgent, ok := app.agents[agentName]
+	if agentName == "" || !ok {
+		return app.tools
+	}
+
+	filteredTools := map[string]loop.Tool{}
+	for name, tool := range app.tools {
+		if selectedAgent.ToolAvailable(name) {
+			filteredTools[name] = tool
+		}
+	}
+
+	return filteredTools
 }
 
 func (app *TUIApp) runAgent(ctx context.Context) {

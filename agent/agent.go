@@ -19,6 +19,14 @@ type Agent struct {
 	Tools       map[string]bool
 }
 
+func (a Agent) ToolAvailable(name string) bool {
+	if available, ok := a.Tools[name]; ok {
+		return available
+	}
+
+	return a.Tools["*"]
+}
+
 const DefaultGlobalRootPath = "~/.hrns/agents"
 const DefaultLocalRootPath = "./.hrns/agents"
 

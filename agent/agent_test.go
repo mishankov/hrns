@@ -142,6 +142,39 @@ func TestGetAgentDataReturnsErrorForInvalidFrontmatter(t *testing.T) {
 	}
 }
 
+func TestAgentToolAvailableRequiresExplicitAvailabilityWithoutWildcard(t *testing.T) {
+	t.Parallel()
+
+	ag := agent.Agent{
+		Tools: map[string]bool{"read_file": true},
+	}
+
+	if !ag.ToolAvailable("read_file") {
+		t.Fatal("read_file is not available, want available")
+	}
+	if ag.ToolAvailable("write_file") {
+		t.Fatal("write_file is available, want unavailable")
+	}
+}
+
+func TestAgentToolAvailableUsesWildcardForUnmentionedTools(t *testing.T) {
+	t.Parallel()
+
+	ag := agent.Agent{
+		Tools: map[string]bool{
+			"write_file": false,
+			"*":          true,
+		},
+	}
+
+	if !ag.ToolAvailable("read_file") {
+		t.Fatal("read_file is not available, want available")
+	}
+	if ag.ToolAvailable("write_file") {
+		t.Fatal("write_file is available, want unavailable")
+	}
+}
+
 func TestLoadAllAgentsLoadsAgentsFromAllRoots(t *testing.T) {
 	t.Parallel()
 
