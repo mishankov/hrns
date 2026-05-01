@@ -24,6 +24,7 @@ tasks:
     desc: Commit and push using hrns
     cmds:
       - go run . exec -message="Create commit message for uncommited changes. Make commit with this message and push it to remote. Do not ask about commit message, just choose most fitting one" -provider="OpenCode Go" -model=kimi-k2.6 -agent=Builder
+      - go install .
 
   hrns:lint:
     desc: Run linter and analyze output
